@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const Standard = require('./models/Standard');
 const History = require('./models/History');
+const User = require('./models/User');
 
 const app = express();
 app.use(cors());
@@ -157,21 +158,65 @@ const authenticateToken = (req, res, next) => {
 };
 
 // --- AUTHENTICATION ROUTES ---
-app.post('/api/auth/login', (req, res) => {
-  const { username, password, role } = req.body;
-  
-  // Hardcoded demo credentials for simplicity
-  if (role === 'admin' && username === 'admin' && password === 'admin') {
-    const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '2h' });
-    return res.json({ token, role: 'admin', username });
-  } 
-  
-  if (role === 'user' && username === 'user' && password === 'password') {
-    const token = jwt.sign({ username, role: 'user' }, JWT_SECRET, { expiresIn: '2h' });
-    return res.json({ token, role: 'user', username });
-  }
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    
+    // Hardcoded demo super-admin for simplicity so you don't get locked out
+    if (role === 'admin' && username === 'admin' && password === 'admin') {
+      const token = jwt.sign({ username, role: 'admin' }, JWT_SECRET, { expiresIn: '2h' });
+      return res.json({ token, role: 'admin', username });
+    } 
 
-  return res.status(401).json({ error: 'Invalid credentials' });
+    // Hardcoded demo user
+    if (role === 'user' && username === 'user' && password === 'password') {
+      const token = jwt.sign({ username, role: 'user' }, JWT_SECRET, { expiresIn: '2h' });
+      return res.json({ token, role: 'user', username });
+    }
+
+    // Check database for registered users
+    const dbUser = await User.findOne({ username, role });
+    if (dbUser && dbUser.password === password) {
+      const token = jwt.sign({ username: dbUser.username, role: dbUser.role }, JWT_SECRET, { expiresIn: '2h' });
+      return res.json({ token, role: dbUser.role, username: dbUser.username });
+    }
+
+    return res.status(401).json({ error: 'Invalid credentials' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Login error' });
+  }
+});
+
+// Admin-only route to register new users
+app.post('/api/auth/register', authenticateToken, async (req, res) => {
+  try {
+    // Check if the requester is an admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can register new users' });
+    }
+
+    const { username, password, role } = req.body;
+    
+    // Basic validation
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already taken' });
+    }
+
+    const newUser = new User({ username, password, role: role || 'user' });
+    await newUser.save();
+    
+    res.status(201).json({ message: 'User registered successfully', username: newUser.username, role: newUser.role });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to register user: ' + err.message });
+  }
 });
 
 // 5. POST /api/extract-standard (Upload file to auto-fill details)

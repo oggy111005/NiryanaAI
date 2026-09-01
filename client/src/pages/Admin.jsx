@@ -75,6 +75,7 @@ export default function Admin() {
   };
 
   return (
+    <>
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200">
       <h2 className="text-2xl font-bold text-primary mb-6 flex items-center">
         <Plus className="mr-2" /> Add New Standard
@@ -142,6 +143,70 @@ export default function Admin() {
 
         <button type="submit" disabled={loading} className="w-full bg-primary hover:bg-blue-900 text-white font-medium py-2 px-4 rounded flex justify-center items-center mt-6 disabled:opacity-50">
           {loading ? 'Processing...' : <><Save size={18} className="mr-2" /> Save Standard</>}
+        </button>
+      </form>
+    </div>
+
+    {/* Admin-only Register User Component */}
+    <RegisterUser />
+    </>
+  );
+}
+
+// Sub-component for registering a new user
+function RegisterUser() {
+  const [formData, setFormData] = useState({ username: '', password: '', role: 'user' });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      setMessage(`Success! Created new ${res.data.role}: ${res.data.username}`);
+      setFormData({ username: '', password: '', role: 'user' });
+    } catch (err) {
+      setMessage(err.response?.data?.error || 'Error creating user.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 mt-8">
+      <h2 className="text-2xl font-bold text-primary mb-6 flex items-center">
+        <Plus className="mr-2" /> Register New User
+      </h2>
+      
+      {message && (
+        <div className={`p-4 mb-6 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input required type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+          <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary">
+            <option value="user">User (Citizen)</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-teal-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center mt-6 disabled:opacity-50">
+          {loading ? 'Processing...' : 'Register User'}
         </button>
       </form>
     </div>
