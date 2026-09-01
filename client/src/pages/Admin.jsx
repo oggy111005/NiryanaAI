@@ -149,6 +149,9 @@ export default function Admin() {
 
     {/* Admin-only Register User Component */}
     <RegisterUser />
+
+    {/* Admin-only View Standards Component */}
+    <ViewStandards />
     </>
   );
 }
@@ -209,6 +212,80 @@ function RegisterUser() {
           {loading ? 'Processing...' : 'Register User'}
         </button>
       </form>
+    </div>
+  );
+}
+  
+// Sub-component to view all standards
+function ViewStandards() {
+  const [standards, setStandards] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [show, setShow] = useState(false);
+  const [error, setError] = useState('');
+
+  const fetchStandards = async () => {
+    if (show) {
+      setShow(false);
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.get('http://localhost:5000/api/standards');
+      setStandards(res.data);
+      setShow(true);
+    } catch (err) {
+      setError('Failed to fetch standards.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 mt-8 mb-16">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-primary">IS Data Database</h2>
+        <button 
+          onClick={fetchStandards}
+          disabled={loading}
+          className="bg-primary hover:bg-blue-900 text-white font-medium py-2 px-4 rounded flex items-center transition-colors disabled:opacity-50"
+        >
+          {loading ? <Loader2 size={18} className="mr-2 animate-spin" /> : null}
+          {show ? 'Hide Standards' : 'Load All Standards'}
+        </button>
+      </div>
+
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
+      {show && standards.length === 0 && (
+        <p className="text-gray-500 text-center py-4">No standards found in the database.</p>
+      )}
+
+      {show && standards.length > 0 && (
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IS Number</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {standards.map((std) => (
+                <tr key={std._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">{std.isNumber}</td>
+                  <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={std.title}>{std.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.category}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.latestVersion || 'N/A'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

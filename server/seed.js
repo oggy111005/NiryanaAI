@@ -131,6 +131,1226 @@ const seedData = [
       { isNumber: "IS 1169", title: "Electric pedestal type fans and regulators", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"]
+  },
+  {
+    "isNumber": "IS 269:2015",
+    "title": "Ordinary Portland Cement - Specification",
+    "category": "Cement",
+    "scope": "This standard covers the manufacture and chemical and physical requirements of ordinary Portland cement (OPC) of 33, 43 and 53 grades.",
+    "latestVersion": "2015",
+    "amendments": [
+      "Amendment 1 - 2017",
+      "Amendment 2 - 2019"
+    ],
+    "alliedStandards": [
+      {
+        "isNumber": "IS 4031",
+        "title": "Methods of physical tests for hydraulic cement",
+        "type": "Test Method"
+      },
+      {
+        "isNumber": "IS 4032",
+        "title": "Method of chemical analysis of hydraulic cement",
+        "type": "Test Method"
+      }
+    ],
+    "certifications": [
+      "BIS ISI Mark"
+    ]
+  },
+  {
+    "isNumber": "IS 1445:1977",
+    "title": "Porcelain Insulators for Overhead Power Lines with a Nominal Voltage up to and including 1000 V",
+    "category": "Electrical",
+    "scope": "Specifies requirements and tests for porcelain insulators for overhead power lines with a nominal voltage up to and including 1000 V.",
+    "latestVersion": "1977",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "BIS ISI Mark"
+    ]
+  },
+  {
+    "isNumber": "IS 374:2019",
+    "title": "Electric Ceiling Type Fans and Regulators - Specification",
+    "category": "Electrical Appliances",
+    "scope": "Specifies the requirements and methods of tests for electric ceiling type fans and their associated regulators.",
+    "latestVersion": "2019",
+    "amendments": [],
+    "alliedStandards": [
+      {
+        "isNumber": "IS 1169",
+        "title": "Electric pedestal type fans and regulators",
+        "type": "Related Product"
+      }
+    ],
+    "certifications": [
+      "BIS ISI Mark"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30001",
+    "title": "Prototype Specification for Power Cables - Variant 1",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for power cables. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30002",
+    "title": "Prototype Specification for Power Cables - Variant 2",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for power cables. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30003",
+    "title": "Prototype Specification for Distribution Equipment - Variant 1",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for distribution equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30004",
+    "title": "Prototype Specification for Distribution Equipment - Variant 2",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for distribution equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30005",
+    "title": "Prototype Specification for Switchgear - Variant 1",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for switchgear. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30006",
+    "title": "Prototype Specification for Switchgear - Variant 2",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for switchgear. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30007",
+    "title": "Prototype Specification for Lighting Equipment - Variant 1",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for lighting equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30008",
+    "title": "Prototype Specification for Lighting Equipment - Variant 2",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for lighting equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30009",
+    "title": "Prototype Specification for Earthing Equipment - Variant 1",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for earthing equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30010",
+    "title": "Prototype Specification for Earthing Equipment - Variant 2",
+    "category": "Electrical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for earthing equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30011",
+    "title": "Prototype Specification for Construction Cement - Variant 1",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for construction cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30012",
+    "title": "Prototype Specification for Construction Cement - Variant 2",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for construction cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30013",
+    "title": "Prototype Specification for Special Purpose Cement - Variant 1",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for special purpose cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30014",
+    "title": "Prototype Specification for Special Purpose Cement - Variant 2",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for special purpose cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30015",
+    "title": "Prototype Specification for Hydraulic Cement - Variant 1",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for hydraulic cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30016",
+    "title": "Prototype Specification for Hydraulic Cement - Variant 2",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for hydraulic cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30017",
+    "title": "Prototype Specification for Masonry Cement - Variant 1",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for masonry cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30018",
+    "title": "Prototype Specification for Masonry Cement - Variant 2",
+    "category": "Cement",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for masonry cement. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30019",
+    "title": "Prototype Specification for Drinking Water Equipment - Variant 1",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for drinking water equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30020",
+    "title": "Prototype Specification for Drinking Water Equipment - Variant 2",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for drinking water equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30021",
+    "title": "Prototype Specification for Water Treatment - Variant 1",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for water treatment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30022",
+    "title": "Prototype Specification for Water Treatment - Variant 2",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for water treatment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30023",
+    "title": "Prototype Specification for Water Storage - Variant 1",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for water storage. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30024",
+    "title": "Prototype Specification for Water Storage - Variant 2",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for water storage. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30025",
+    "title": "Prototype Specification for Filtration Equipment - Variant 1",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for filtration equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30026",
+    "title": "Prototype Specification for Filtration Equipment - Variant 2",
+    "category": "Water",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for filtration equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30027",
+    "title": "Prototype Specification for Structural Steel - Variant 1",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for structural steel. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30028",
+    "title": "Prototype Specification for Structural Steel - Variant 2",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for structural steel. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30029",
+    "title": "Prototype Specification for Steel Bars - Variant 1",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel bars. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30030",
+    "title": "Prototype Specification for Steel Bars - Variant 2",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel bars. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30031",
+    "title": "Prototype Specification for Steel Sections - Variant 1",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel sections. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30032",
+    "title": "Prototype Specification for Steel Sections - Variant 2",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel sections. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30033",
+    "title": "Prototype Specification for Steel Components - Variant 1",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30034",
+    "title": "Prototype Specification for Steel Components - Variant 2",
+    "category": "Steel",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for steel components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30035",
+    "title": "Prototype Specification for Industrial Pumps - Variant 1",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for industrial pumps. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30036",
+    "title": "Prototype Specification for Industrial Pumps - Variant 2",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for industrial pumps. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30037",
+    "title": "Prototype Specification for Industrial Valves - Variant 1",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for industrial valves. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30038",
+    "title": "Prototype Specification for Industrial Valves - Variant 2",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for industrial valves. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30039",
+    "title": "Prototype Specification for Bearings - Variant 1",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for bearings. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30040",
+    "title": "Prototype Specification for Bearings - Variant 2",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for bearings. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30041",
+    "title": "Prototype Specification for Fasteners - Variant 1",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for fasteners. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30042",
+    "title": "Prototype Specification for Fasteners - Variant 2",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for fasteners. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30043",
+    "title": "Prototype Specification for Welding Equipment - Variant 1",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for welding equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30044",
+    "title": "Prototype Specification for Welding Equipment - Variant 2",
+    "category": "Mechanical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for welding equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30045",
+    "title": "Prototype Specification for Packaged Food - Variant 1",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for packaged food. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30046",
+    "title": "Prototype Specification for Packaged Food - Variant 2",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for packaged food. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30047",
+    "title": "Prototype Specification for Dairy Products - Variant 1",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for dairy products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30048",
+    "title": "Prototype Specification for Dairy Products - Variant 2",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for dairy products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30049",
+    "title": "Prototype Specification for Edible Oils - Variant 1",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for edible oils. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30050",
+    "title": "Prototype Specification for Edible Oils - Variant 2",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for edible oils. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30051",
+    "title": "Prototype Specification for Food Packaging - Variant 1",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for food packaging. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30052",
+    "title": "Prototype Specification for Food Packaging - Variant 2",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for food packaging. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30053",
+    "title": "Prototype Specification for Grain Products - Variant 1",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for grain products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30054",
+    "title": "Prototype Specification for Grain Products - Variant 2",
+    "category": "Food",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for grain products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30055",
+    "title": "Prototype Specification for Medical Equipment - Variant 1",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for medical equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30056",
+    "title": "Prototype Specification for Medical Equipment - Variant 2",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for medical equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30057",
+    "title": "Prototype Specification for Medical Disposables - Variant 1",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for medical disposables. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30058",
+    "title": "Prototype Specification for Medical Disposables - Variant 2",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for medical disposables. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30059",
+    "title": "Prototype Specification for Protective Equipment - Variant 1",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for protective equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30060",
+    "title": "Prototype Specification for Protective Equipment - Variant 2",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for protective equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30061",
+    "title": "Prototype Specification for Sterilization Equipment - Variant 1",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for sterilization equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30062",
+    "title": "Prototype Specification for Sterilization Equipment - Variant 2",
+    "category": "Medical",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for sterilization equipment. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30063",
+    "title": "Prototype Specification for Vehicle Components - Variant 1",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for vehicle components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30064",
+    "title": "Prototype Specification for Vehicle Components - Variant 2",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for vehicle components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30065",
+    "title": "Prototype Specification for Automotive Lighting - Variant 1",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for automotive lighting. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30066",
+    "title": "Prototype Specification for Automotive Lighting - Variant 2",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for automotive lighting. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30067",
+    "title": "Prototype Specification for Braking Components - Variant 1",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for braking components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30068",
+    "title": "Prototype Specification for Braking Components - Variant 2",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for braking components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30069",
+    "title": "Prototype Specification for Tyres - Variant 1",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for tyres. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30070",
+    "title": "Prototype Specification for Tyres - Variant 2",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for tyres. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30071",
+    "title": "Prototype Specification for Safety Components - Variant 1",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for safety components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30072",
+    "title": "Prototype Specification for Safety Components - Variant 2",
+    "category": "Automotive",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for safety components. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30073",
+    "title": "Prototype Specification for Household Appliances - Variant 1",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for household appliances. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30074",
+    "title": "Prototype Specification for Household Appliances - Variant 2",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for household appliances. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30075",
+    "title": "Prototype Specification for Plastic Products - Variant 1",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for plastic products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30076",
+    "title": "Prototype Specification for Plastic Products - Variant 2",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for plastic products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30077",
+    "title": "Prototype Specification for Furniture - Variant 1",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for furniture. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30078",
+    "title": "Prototype Specification for Furniture - Variant 2",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for furniture. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30079",
+    "title": "Prototype Specification for Textile Products - Variant 1",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for textile products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30080",
+    "title": "Prototype Specification for Textile Products - Variant 2",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for textile products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30081",
+    "title": "Prototype Specification for Safety Products - Variant 1",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for safety products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30082",
+    "title": "Prototype Specification for Safety Products - Variant 2",
+    "category": "Consumer Products",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for safety products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30083",
+    "title": "Prototype Specification for Building Materials - Variant 1",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for building materials. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30084",
+    "title": "Prototype Specification for Building Materials - Variant 2",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for building materials. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30085",
+    "title": "Prototype Specification for Concrete Products - Variant 1",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for concrete products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30086",
+    "title": "Prototype Specification for Concrete Products - Variant 2",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for concrete products. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30087",
+    "title": "Prototype Specification for Aggregates - Variant 1",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for aggregates. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30088",
+    "title": "Prototype Specification for Aggregates - Variant 2",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for aggregates. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30089",
+    "title": "Prototype Specification for Roofing Materials - Variant 1",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for roofing materials. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30090",
+    "title": "Prototype Specification for Roofing Materials - Variant 2",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for roofing materials. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30091",
+    "title": "Prototype Specification for Pipes - Variant 1",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for pipes. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-30092",
+    "title": "Prototype Specification for Pipes - Variant 2",
+    "category": "Construction",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, performance requirements, safety considerations and applicable test methods for pipes. This record is for SIH26108 development and must be validated against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-40001",
+    "title": "Prototype Specification for Safety Helmets",
+    "category": "Industrial Safety",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, safety requirements and test methods for safety helmets. Validate against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-40002",
+    "title": "Prototype Specification for Protective Gloves",
+    "category": "Industrial Safety",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, safety requirements and test methods for protective gloves. Validate against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-40003",
+    "title": "Prototype Specification for Electronic Control Equipment",
+    "category": "Electronics",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, safety requirements and test methods for electronic control equipment. Validate against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-40004",
+    "title": "Prototype Specification for Communication Equipment",
+    "category": "Telecommunications",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, safety requirements and test methods for communication equipment. Validate against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
+  },
+  {
+    "isNumber": "DEMO-IS-40005",
+    "title": "Prototype Specification for Pollution Control Equipment",
+    "category": "Environment",
+    "scope": "Prototype dataset record describing procurement requirements, quality parameters, safety requirements and test methods for pollution control equipment. Validate against official BIS metadata before production use.",
+    "latestVersion": "DEMO",
+    "amendments": [],
+    "alliedStandards": [],
+    "certifications": [
+      "VERIFY WITH BIS"
+    ]
   }
 ];
 
