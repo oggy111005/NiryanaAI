@@ -51,8 +51,18 @@ app.post('/api/recommend', async (req, res) => {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: 'Query is required' });
 
-    // Save history (optional guest tracking)
-    await History.create({ query });
+    let userId = 'Guest';
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const user = jwt.verify(token, JWT_SECRET);
+        if (user && user.username) userId = user.username;
+      } catch (e) { /* ignore invalid token for guest searches */ }
+    }
+
+    // Save history with the logged-in user's identity
+    await History.create({ query, userId });
 
     if (!extractor) {
         return res.status(503).json({ error: 'AI model is still loading, please try again in a few seconds.' });
@@ -333,12 +343,63 @@ app.post('/api/extract-standard', upload.single('file'), async (req, res) => {
 });
 
 // 6. GET /api/history
-app.get('/api/history', async (req, res) => {
+app.get('/api/history', authenticateToken, async (req, res) => {
   try {
-    const history = await History.find().sort({ timestamp: -1 }).limit(50);
+    // Only fetch history for the currently logged-in user
+    const history = await History.find({ userId: req.user.username }).sort({ timestamp: -1 }).limit(50);
     res.json(history);
   } catch (err) {
     res.status(500).json({ error: 'Server error fetching history' });
+  }
+});
+
+// 7. POST /api/chat (LLM integration)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message required' });
+
+    // Check if the user has provided a Gemini API Key in .env
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    if (apiKey) {
+      // Connect to real Google Gemini API!
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const prompt = `You are the NiryanaAI Assistant, helping users search for Indian Standards (IS). 
+      The user says: "${message}"
+      Please provide a brief, helpful response. If they want a query rewritten, rewrite it to be highly descriptive for semantic search.`;
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return res.json({ reply: response.text() });
+    }
+
+    // --- FALLBACK MOCK API (if no key is found) ---
+    const lowerMsg = message.toLowerCase();
+    let reply = '';
+
+    if (lowerMsg.includes('search for') || lowerMsg.includes('help me find')) {
+      reply = "To get the best results, try searching with specific materials or use cases. For example, instead of just 'cables', you could search: 'performance requirements for underground PVC power cables'.";
+    } 
+    else if (lowerMsg.includes('compare') || lowerMsg.includes('difference')) {
+      reply = "When comparing IS standards, look at the 'Category' and 'Scope'. One standard might cover the **testing methods**, while another covers the **product specifications**.";
+    }
+    else if (lowerMsg.includes('rewrite')) {
+      reply = `Here is a better way to write that query for our semantic database: "safety and testing specifications for ${message.replace(/rewrite/i, '').trim() || 'your product'}"`;
+    }
+    else {
+      reply = "I'm the NiryanaAI mock assistant! Provide your Google Gemini API Key in the server/.env file to make me genuinely intelligent!";
+    }
+
+    setTimeout(() => {
+      res.json({ reply });
+    }, 1000);
+
+  } catch (err) {
+    console.error('Chat error:', err);
+    res.status(500).json({ error: 'Chat error' });
   }
 });
 

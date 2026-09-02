@@ -1,4 +1,4 @@
-# IS-Recommend Prototype (Smart India Hackathon)
+# NiryanaAI Prototype (Smart India Hackathon)
 
 This is a beginner-friendly MERN stack prototype designed to help procurement officials find relevant Indian Standards (IS) based on free-text product descriptions, using local AI semantic search.
 

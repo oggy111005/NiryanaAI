@@ -6,8 +6,9 @@ import Results from './pages/Results';
 import Detail from './pages/Detail';
 import History from './pages/History';
 import Admin from './pages/Admin';
-import Database from './pages/Database';
+import DatabaseView from './pages/DatabaseView';
 import Login from './pages/Login';
+import Chatbot from './components/Chatbot';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -33,7 +34,7 @@ const Navigation = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
             <Link to="/" className="text-xl font-bold flex items-center">
-              <span className="text-secondary mr-2">🏛</span> IS-Recommend
+              <span className="text-secondary mr-2">🏛</span> NiryanaAI
             </Link>
             
             <div className="hidden md:flex space-x-4">
@@ -100,13 +101,15 @@ function AppRoutes() {
           {/* Role-specific Protected routes */}
           <Route path="/history" element={<ProtectedRoute requiredRole="user"><History /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
-          <Route path="/database" element={<ProtectedRoute requiredRole="admin"><Database /></ProtectedRoute>} />
+          <Route path="/database" element={<ProtectedRoute requiredRole="admin"><DatabaseView /></ProtectedRoute>} />
         </Routes>
       </main>
 
+      <Chatbot />
+
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} IS-Recommend. For Smart India Hackathon Prototype.
+          &copy; {new Date().getFullYear()} NiryanaAI. For Smart India Hackathon Prototype.
         </div>
       </footer>
     </div>

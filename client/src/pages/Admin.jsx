@@ -155,7 +155,7 @@ export default function Admin() {
 
 // Combined Tabbed Component for User Management
 function UserManagement() {
-  const [activeTab, setActiveTab] = useState('register'); // 'register' or 'manage'
+  const [activeTab, setActiveTab] = useState('register');
 
   return (
     <div className="max-w-4xl mx-auto mt-8 mb-16">
@@ -207,38 +207,40 @@ function RegisterUserContent() {
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-bold text-primary mb-6">Register New User</h2>
-      
-      {message && (
-        <div className={`p-4 mb-6 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-          {message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-          <input required type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
-        </div>
+    <div className="flex flex-col items-center">
+      <div className="w-full max-w-md">
+        <h2 className="text-xl font-bold text-primary mb-6 text-center">Register New User</h2>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-          <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary">
-            <option value="user">User (Citizen)</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+        {message && (
+          <div className={`p-4 mb-6 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            {message}
+          </div>
+        )}
 
-        <button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-teal-700 text-white font-medium py-2 px-4 rounded mt-4 disabled:opacity-50">
-          {loading ? 'Processing...' : 'Register User'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input required type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary">
+              <option value="user">User (Citizen)</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-teal-700 text-white font-medium py-2 px-4 rounded mt-4 disabled:opacity-50">
+            {loading ? 'Processing...' : 'Register User'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
@@ -251,7 +253,6 @@ function ManageUsersContent() {
   const [editingUser, setEditingUser] = useState(null);
   const [editFormData, setEditFormData] = useState({ role: '', password: '' });
 
-  // Load users automatically when tab is opened
   useEffect(() => {
     fetchUsers();
   }, []);
