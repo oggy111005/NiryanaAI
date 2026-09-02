@@ -219,6 +219,50 @@ app.post('/api/auth/register', authenticateToken, async (req, res) => {
   }
 });
 
+// Admin-only route to list all users
+app.get('/api/auth/users', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can view users' });
+    }
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Admin-only route to delete a user
+app.delete('/api/auth/users/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can delete users' });
+    }
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Admin-only route to update a user's role or password
+app.put('/api/auth/users/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Only admins can edit users' });
+    }
+    const { role, password } = req.body;
+    const updates = {};
+    if (role) updates.role = role;
+    if (password) updates.password = password; // In production, hash this!
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
+    res.json(updatedUser);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
 // 5. POST /api/extract-standard (Upload file to auto-fill details)
 app.post('/api/extract-standard', upload.single('file'), async (req, res) => {
   try {

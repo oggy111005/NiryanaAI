@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Plus, Save, Upload, Loader2 } from 'lucide-react';
 
@@ -147,17 +147,46 @@ export default function Admin() {
       </form>
     </div>
 
-    {/* Admin-only Register User Component */}
-    <RegisterUser />
-
-    {/* Admin-only View Standards Component */}
-    <ViewStandards />
+    {/* Tabbed User Management Component */}
+    <UserManagement />
     </>
   );
 }
 
-// Sub-component for registering a new user
-function RegisterUser() {
+// Combined Tabbed Component for User Management
+function UserManagement() {
+  const [activeTab, setActiveTab] = useState('register'); // 'register' or 'manage'
+
+  return (
+    <div className="max-w-4xl mx-auto mt-8 mb-16">
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          onClick={() => setActiveTab('register')}
+          className={`py-2 px-6 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'register' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Register New User
+        </button>
+        <button
+          onClick={() => setActiveTab('manage')}
+          className={`py-2 px-6 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'manage' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          Manage Existing Users
+        </button>
+      </div>
+
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+        {activeTab === 'register' ? <RegisterUserContent /> : <ManageUsersContent />}
+      </div>
+    </div>
+  );
+}
+
+// Sub-component content for registering a new user
+function RegisterUserContent() {
   const [formData, setFormData] = useState({ username: '', password: '', role: 'user' });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -178,10 +207,8 @@ function RegisterUser() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 mt-8">
-      <h2 className="text-2xl font-bold text-primary mb-6 flex items-center">
-        <Plus className="mr-2" /> Register New User
-      </h2>
+    <div>
+      <h2 className="text-xl font-bold text-primary mb-6">Register New User</h2>
       
       {message && (
         <div className={`p-4 mb-6 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
@@ -189,7 +216,7 @@ function RegisterUser() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
           <input required type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
@@ -208,84 +235,140 @@ function RegisterUser() {
           </select>
         </div>
 
-        <button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-teal-700 text-white font-medium py-2 px-4 rounded flex justify-center items-center mt-6 disabled:opacity-50">
+        <button type="submit" disabled={loading} className="w-full bg-secondary hover:bg-teal-700 text-white font-medium py-2 px-4 rounded mt-4 disabled:opacity-50">
           {loading ? 'Processing...' : 'Register User'}
         </button>
       </form>
     </div>
   );
 }
-  
-// Sub-component to view all standards
-function ViewStandards() {
-  const [standards, setStandards] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [show, setShow] = useState(false);
-  const [error, setError] = useState('');
 
-  const fetchStandards = async () => {
-    if (show) {
-      setShow(false);
-      return;
-    }
-    
+// Sub-component content for managing existing users
+function ManageUsersContent() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFormData, setEditFormData] = useState({ role: '', password: '' });
+
+  // Load users automatically when tab is opened
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
     setLoading(true);
-    setError('');
     try {
-      const res = await axios.get('http://localhost:5000/api/standards');
-      setStandards(res.data);
-      setShow(true);
+      const res = await axios.get('http://localhost:5000/api/auth/users');
+      setUsers(res.data);
     } catch (err) {
-      setError('Failed to fetch standards.');
+      setMessage('Failed to fetch users.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDelete = async (id, username) => {
+    if (!window.confirm(`Are you sure you want to delete user ${username}?`)) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/auth/users/${id}`);
+      setMessage(`User ${username} deleted.`);
+      fetchUsers();
+    } catch (err) {
+      setMessage('Failed to delete user.');
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:5000/api/auth/users/${editingUser._id}`, editFormData);
+      setMessage(`User ${editingUser.username} updated.`);
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      setMessage('Failed to update user.');
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 mt-8 mb-16">
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-primary">IS Data Database</h2>
-        <button 
-          onClick={fetchStandards}
-          disabled={loading}
-          className="bg-primary hover:bg-blue-900 text-white font-medium py-2 px-4 rounded flex items-center transition-colors disabled:opacity-50"
-        >
-          {loading ? <Loader2 size={18} className="mr-2 animate-spin" /> : null}
-          {show ? 'Hide Standards' : 'Load All Standards'}
+        <h2 className="text-xl font-bold text-primary">Manage Users</h2>
+        <button onClick={fetchUsers} className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-3 rounded text-sm transition-colors flex items-center">
+          {loading ? 'Refreshing...' : 'Refresh List'}
         </button>
       </div>
 
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-
-      {show && standards.length === 0 && (
-        <p className="text-gray-500 text-center py-4">No standards found in the database.</p>
-      )}
-
-      {show && standards.length > 0 && (
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IS Number</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {standards.map((std) => (
-                <tr key={std._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">{std.isNumber}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={std.title}>{std.title}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.category}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.latestVersion || 'N/A'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {message && (
+        <div className={`p-4 mb-4 rounded text-sm ${message.includes('Failed') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          {message}
         </div>
       )}
+
+      {editingUser ? (
+        <form onSubmit={handleEditSubmit} className="mb-6 p-4 border border-blue-200 bg-blue-50 rounded-lg max-w-md">
+          <h3 className="font-bold mb-3 text-blue-800">Editing: {editingUser.username}</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">New Role</label>
+              <select value={editFormData.role} onChange={e => setEditFormData({...editFormData, role: e.target.value})} className="w-full p-2 border rounded">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">New Password (leave blank to keep current)</label>
+              <input type="password" value={editFormData.password} onChange={e => setEditFormData({...editFormData, password: e.target.value})} className="w-full p-2 border rounded" placeholder="***" />
+            </div>
+            <div className="flex space-x-2 pt-2">
+              <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">Save Changes</button>
+              <button type="button" onClick={() => setEditingUser(null)} className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm">Cancel</button>
+            </div>
+          </div>
+        </form>
+      ) : null}
+
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.length === 0 && !loading ? (
+              <tr><td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">No users found.</td></tr>
+            ) : null}
+            {users.map((u) => (
+              <tr key={u._id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.username}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                    {u.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button 
+                    onClick={() => { setEditingUser(u); setEditFormData({ role: u.role, password: '' }); }}
+                    className="text-blue-600 hover:text-blue-900 mr-4"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(u._id, u.username)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

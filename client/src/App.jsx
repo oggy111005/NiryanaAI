@@ -6,6 +6,7 @@ import Results from './pages/Results';
 import Detail from './pages/Detail';
 import History from './pages/History';
 import Admin from './pages/Admin';
+import Database from './pages/Database';
 import Login from './pages/Login';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
@@ -36,14 +37,19 @@ const Navigation = () => {
             </Link>
             
             <div className="hidden md:flex space-x-4">
-              <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Search</Link>
+              {user && (
+                <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Search</Link>
+              )}
               
               {user?.role === 'user' && (
                 <Link to="/history" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">History</Link>
               )}
               
               {user?.role === 'admin' && (
-                <Link to="/admin" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</Link>
+                <>
+                  <Link to="/admin" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</Link>
+                  <Link to="/database" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">IS Database</Link>
+                </>
               )}
             </div>
           </div>
@@ -82,18 +88,19 @@ function AppRoutes() {
       
       <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         <Routes>
-          {/* Public / Semi-public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/standard/:id" element={<Detail />} />
-          
-          {/* Auth routes */}
+          {/* Auth routes (Public) */}
           <Route path="/user-login" element={<Login role="user" />} />
           <Route path="/admin-login" element={<Login role="admin" />} />
 
-          {/* Protected routes */}
+          {/* Protected generic routes (requires ANY login) */}
+          <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
+          <Route path="/standard/:id" element={<ProtectedRoute><Detail /></ProtectedRoute>} />
+
+          {/* Role-specific Protected routes */}
           <Route path="/history" element={<ProtectedRoute requiredRole="user"><History /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+          <Route path="/database" element={<ProtectedRoute requiredRole="admin"><Database /></ProtectedRoute>} />
         </Routes>
       </main>
 
