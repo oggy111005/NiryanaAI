@@ -257,6 +257,18 @@ app.delete('/api/auth/users/:id', authenticateToken, requireRole('admin'), async
 });
 
 // 1. POST /api/recommend (Public recommendation, records user ID if authenticated)
+//
+// Exact IS-number lookup (e.g. "IS 269:2015" or base "IS 269") is attempted
+// before the embedding model is consulted. If found, matchType is set to 'exact'
+// and the record is returned immediately without a similarity score.
+//
+// For base-number queries with multiple active editions, the one with the
+// highest numeric publication year (parsed from latestVersion) is selected.
+// String-sort alone is insufficient because "1999" > "2015" lexicographically.
+//
+// The confidence threshold is provisional (default 0.40) and must be
+// calibrated against a representative evaluation dataset before production.
+// Override with env var RECOMMENDATION_CONFIDENCE_THRESHOLD.
 app.post('/api/recommend', optionalAuth, async (req, res) => {
   try {
     const { query } = req.body;
@@ -264,31 +276,47 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'Query is required' });
     }
 
-    // Save history with user tracking
-    const userId = req.user ? req.user.username : 'guest';
+    // Save history with authenticated user ID or 'guest'
+    const userId = req.user ? req.user.id : 'guest';
     await History.create({ query, userId });
 
     // --- EXACT MATCH PRECEDENCE ---
     const normalizedQuery = query.toLowerCase().replace(/\s+/g, '');
-    
-    // Check for exact normalized match (e.g. "is269:2015")
-    const exactMatch = await Standard.findOne({ normalizedIsNumber: normalizedQuery }).select('-embedding').lean();
-    
-    // Check for base match if no exact match (e.g. "is269")
-    const baseMatch = !exactMatch && !normalizedQuery.includes(':') 
-      ? await Standard.findOne({ baseIsNumber: normalizedQuery }).sort({ latestVersion: -1 }).select('-embedding').lean() 
-      : null;
+
+    // 1a. Exact versioned match: "IS 269:2015" -> normalizedIsNumber = "is269:2015"
+    const exactMatch = await Standard.findOne({ normalizedIsNumber: normalizedQuery })
+      .select('-embedding').lean();
+
+    // 1b. Base-number match: "IS 269" -> baseIsNumber = "is269"
+    //     Only active records are considered. Among multiple editions, the one
+    //     with the highest numeric year in latestVersion is chosen.
+    let baseMatch = null;
+    if (!exactMatch && !normalizedQuery.includes(':')) {
+      const candidates = await Standard.find({
+        baseIsNumber: normalizedQuery,
+        status: 'active'
+      }).select('-embedding').lean();
+
+      if (candidates.length > 0) {
+        // Parse numeric year from strings like "2015", "2015 (Part 1)", etc.
+        baseMatch = candidates.reduce((best, c) => {
+          const bestYear = parseInt((best.latestVersion || '').replace(/\D/g, ''), 10) || 0;
+          const cYear = parseInt((c.latestVersion || '').replace(/\D/g, ''), 10) || 0;
+          return cYear > bestYear ? c : best;
+        });
+      }
+    }
 
     const matchedStd = exactMatch || baseMatch;
 
     if (matchedStd) {
-      matchedStd.matchType = 'Exact IS number match';
-      matchedStd.similarityScore = 1.0; // Max out score since it's exact
+      // matchType: 'exact' — no synthetic similarity score attached
+      matchedStd.matchType = 'exact';
 
-      // Fetch related standards by category to populate the UI
-      const related = await Standard.find({ 
-        category: matchedStd.category, 
-        _id: { $ne: matchedStd._id } 
+      // Fetch related standards in the same category (excluding self)
+      const related = await Standard.find({
+        category: matchedStd.category,
+        _id: { $ne: matchedStd._id }
       }).limit(4).select('-embedding').lean();
 
       return res.json({ primary: matchedStd, related });
@@ -313,13 +341,17 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
     }
 
     // --- CONFIDENCE CUTOFF THRESHOLD ---
-    const THRESHOLD = 0.40;
-    
+    // Provisional default: 0.40. Override with RECOMMENDATION_CONFIDENCE_THRESHOLD in .env
+    // This value has NOT been calibrated against a benchmark dataset and must be
+    // adjusted after evaluation before production deployment.
+    const rawThreshold = parseFloat(process.env.RECOMMENDATION_CONFIDENCE_THRESHOLD);
+    const THRESHOLD = Number.isFinite(rawThreshold) ? rawThreshold : 0.40;
+
     if (ranked[0].similarityScore < THRESHOLD) {
-      return res.json({ 
-        primary: null, 
-        related: [], 
-        message: "No confident Indian Standard match found." 
+      return res.json({
+        primary: null,
+        related: [],
+        message: 'No confident Indian Standard match found. Try rephrasing with more specific engineering terms.'
       });
     }
 
@@ -519,8 +551,8 @@ app.post('/api/extract-standard', authenticateToken, requireRole('admin'), (req,
 // 6. GET /api/history
 app.get('/api/history', authenticateToken, async (req, res) => {
   try {
-    // Only fetch history for the currently logged-in user
-    const history = await History.find({ userId: req.user.username }).sort({ timestamp: -1 }).limit(50);
+    // Only fetch history for the currently authenticated user (matched by user ID)
+    const history = await History.find({ userId: req.user.id }).sort({ timestamp: -1 }).limit(50);
     res.json(history);
   } catch (err) {
     res.status(500).json({ error: 'Server error fetching history' });
