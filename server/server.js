@@ -167,21 +167,24 @@ app.get('/api/health', (req, res) => {
 // -------------------------------------------------------------
 const bcrypt = require('bcryptjs');
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     const { username, password, role } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    if (!username || !username.trim() || !password) return res.status(400).json({ error: 'Username and password required' });
     
-    const existing = await User.findOne({ username });
+    const validRoles = ['user', 'admin'];
+    const assignedRole = role || 'user';
+    if (!validRoles.includes(assignedRole)) {
+      return res.status(400).json({ error: "Invalid role. Role must be either 'user' or 'admin'" });
+    }
+
+    const existing = await User.findOne({ username: username.trim() });
     if (existing) return res.status(400).json({ error: 'Username already exists' });
     
-    // In our bootstrap-admin.js we pass plain text and rely on User.js pre-save hook, 
-    // but maybe the pre-save hook was removed or modified? Let's check User.js.
-    // Actually, we'll just save it and let the model hook handle hashing (standard practice).
-    const user = new User({ username, password, role: role || 'user' });
+    const user = new User({ username: username.trim(), password, role: assignedRole });
     await user.save();
     
-    res.json({ message: 'User created', role: user.role, username: user.username });
+    res.status(201).json({ message: 'User registered successfully', role: user.role, username: user.username });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to register user' });
@@ -191,21 +194,21 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    const user = await User.findOne({ username: username ? username.trim() : '' });
+    if (!user) return res.status(401).json({ error: 'Invalid username or password' });
     
     // Check if user model has comparePassword or if we use bcrypt
     const isMatch = user.comparePassword ? await user.comparePassword(password) : await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!isMatch) return res.status(401).json({ error: 'Invalid username or password' });
     
     const token = jwt.sign(
-      { id: user._id, username: user.username, role: user.role },
+      { id: user._id.toString(), username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     
     // Send a flattened response to match Login.jsx's expectations
-    res.json({ token, id: user._id, username: user.username, role: user.role });
+    res.json({ token, id: user._id.toString(), username: user.username, role: user.role });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login error' });

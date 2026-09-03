@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
@@ -145,6 +145,32 @@ test('3. Role enforcement: Regular user cannot access admin-only write endpoints
     headers: { 'Authorization': `Bearer ${userToken}` }
   });
   assert.equal(resUsers.status, 403);
+
+  // Test POST /api/auth/register with regular user token (must be 403)
+  const resRegUser = await fetch(`${baseUrl}/api/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${userToken}`
+    },
+    body: JSON.stringify({ username: 'forbidden_reg_user', password: 'password123' })
+  });
+  assert.equal(resRegUser.status, 403);
+});
+
+test('3b. Admin registration: Admin user can register new users successfully (HTTP 201)', async () => {
+  const resRegAdmin = await fetch(`${baseUrl}/api/auth/register`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({ username: 'new_registered_user', password: 'password123', role: 'user' })
+  });
+  assert.equal(resRegAdmin.status, 201);
+  const regData = await resRegAdmin.json();
+  assert.equal(regData.username, 'new_registered_user');
+  assert.equal(regData.role, 'user');
 });
 
 test('4. Password hashing with bcrypt: Passwords are saved as bcrypt hashes and never exposed in responses', async () => {
