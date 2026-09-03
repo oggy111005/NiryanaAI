@@ -41,11 +41,19 @@ export default function Results() {
         <div className={`bg-white p-6 rounded-lg shadow-sm border-2 mb-8 relative overflow-hidden ${primary.matchType ? 'border-green-500' : 'border-primary'}`}>
           <div className={`absolute top-0 right-0 text-white text-xs font-bold px-4 py-1.5 rounded-bl-lg uppercase flex items-center shadow-sm ${primary.matchType ? 'bg-green-600' : 'bg-primary'}`}>
             {primary.matchType ? (
+              <><CheckCircle size={14} className="mr-1.5" /> EXACT MATCH</>
+            ) : (
+              <><Shield size={14} className="mr-1.5" /> AI MATCH ({(primary.similarityScore * 100).toFixed(1)}%)</>
+            )}
+          </div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4 pt-2">
             <div>
               <h2 className={`text-3xl font-bold ${primary.matchType ? 'text-green-700' : 'text-primary'}`}>{primary.isNumber}</h2>
               <h3 className="text-xl text-gray-800 font-medium mt-1">{primary.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
+              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-200">
                 Category: {primary.category}
               </span>
               <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">
@@ -54,6 +62,7 @@ export default function Results() {
             </div>
           </div>
           
+          <div className="mb-4">
             <h4 className="font-semibold text-gray-800 mb-2">Scope</h4>
             <p className="text-gray-600 text-sm leading-relaxed">{primary.scope}</p>
           </div>
@@ -63,14 +72,23 @@ export default function Results() {
               <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                 <CheckCircle size={18} className="mr-2 text-green-600" /> Certifications
               </h4>
+              {primary.certifications && primary.certifications.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {primary.certifications.map((cert, idx) => (
+                    <span key={idx} className="bg-white border border-gray-200 text-gray-700 text-xs px-2 py-1 rounded shadow-sm">
+                      {cert}
+                    </span>
+                  ))}
                 </div>
               ) : (
                 <span className="text-gray-500 text-sm">No specific certifications listed.</span>
+              )}
             </div>
             
             <div>
                <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
                 <FileText size={18} className="mr-2 text-secondary" /> Recent Amendments
+              </h4>
                {primary.amendments && primary.amendments.length > 0 ? (
                 <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                   {primary.amendments.map((amd, idx) => (
@@ -88,6 +106,8 @@ export default function Results() {
               View Full Details &rarr;
             </Link>
           </div>
+        </div>
+      ) : (
         <div className="mb-8 p-6 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
           <div className="flex items-center mb-2">
             <div className="bg-red-100 p-2 rounded-full mr-3">
@@ -98,6 +118,7 @@ export default function Results() {
           <p className="text-red-700 ml-12">
             {location.state?.results?.message || "No confident Indian Standard match found. The AI determined that the available standards do not closely match your query. Try adding more specific engineering terms."}
           </p>
+        </div>
       )}
 
       {primary && primary.alliedStandards && primary.alliedStandards.length > 0 && (
@@ -106,6 +127,15 @@ export default function Results() {
             <FileText size={20} className="mr-2 text-primary" /> Official Allied Standards (Normative)
           </h3>
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+            <ul className="space-y-3">
+              {primary.alliedStandards.map((allied, idx) => (
+                <li key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 rounded shadow-sm border border-gray-100">
+                  <div>
+                    <span className="font-bold text-primary mr-2">{allied.isNumber}</span>
+                    <span className="text-gray-700 text-sm">{allied.title}</span>
+                  </div>
+                  {allied.type && (
+                    <span className="mt-2 sm:mt-0 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                       {allied.type}
                     </span>
                   )}
@@ -144,4 +174,3 @@ export default function Results() {
     </div>
   );
 }
-
