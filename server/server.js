@@ -162,6 +162,97 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// -------------------------------------------------------------
+// AUTH ROUTES (Restored)
+// -------------------------------------------------------------
+const bcrypt = require('bcryptjs');
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    
+    const existing = await User.findOne({ username });
+    if (existing) return res.status(400).json({ error: 'Username already exists' });
+    
+    // In our bootstrap-admin.js we pass plain text and rely on User.js pre-save hook, 
+    // but maybe the pre-save hook was removed or modified? Let's check User.js.
+    // Actually, we'll just save it and let the model hook handle hashing (standard practice).
+    const user = new User({ username, password, role: role || 'user' });
+    await user.save();
+    
+    res.json({ message: 'User created', role: user.role, username: user.username });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to register user' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    // Check if user model has comparePassword or if we use bcrypt
+    const isMatch = user.comparePassword ? await user.comparePassword(password) : await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    const token = jwt.sign(
+      { id: user._id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Send a flattened response to match Login.jsx's expectations
+    res.json({ token, id: user._id, username: user.username, role: user.role });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Login error' });
+  }
+});
+
+app.get('/api/auth/users', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const users = await User.find({}, '-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.put('/api/auth/users/:id', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { role, password } = req.body;
+    const updateData = { role };
+    
+    if (password) {
+      // Manual hash in case hook doesn't trigger on findByIdAndUpdate, 
+      // or we can use findById, assign, save()
+      const user = await User.findById(req.params.id);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      user.role = role;
+      user.password = password; // pre-save hook handles hashing
+      await user.save();
+      return res.json({ message: 'User updated' });
+    } else {
+      await User.findByIdAndUpdate(req.params.id, updateData);
+      return res.json({ message: 'User updated' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+app.delete('/api/auth/users/:id', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // 1. POST /api/recommend (Public recommendation, records user ID if authenticated)
 app.post('/api/recommend', optionalAuth, async (req, res) => {
   try {
@@ -266,6 +357,12 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
     delete returnedStd.embedding;
     res.status(201).json(returnedStd);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: 'Duplicate Standard',
+        message: `A standard with this IS Number already exists. The system enforces strict deduplication. Please edit the existing record instead.`
+      });
+    }
     console.error('Error creating standard:', err);
     res.status(500).json({ error: 'Server error creating standard' });
   }

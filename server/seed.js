@@ -1361,28 +1361,60 @@ async function generateEmbedding(text, extractor) {
 }
 
 async function seed() {
+  const args = process.argv.slice(2);
+  const wantsReset = args.includes('--force-reset') || args.includes('--confirm-reset') || args.includes('--reset');
+  const canReset = args.includes('--force-reset') && args.includes('--confirm-reset');
+
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/is-recommend';
-    console.log('Connecting to MongoDB...', mongoUri);
+    // Sanitize URI for logging to prevent credential leaks
+    const sanitizedUri = mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
+    console.log(`Connecting to MongoDB... ${sanitizedUri}`);
+    
     await mongoose.connect(mongoUri);
-    console.log('Connected to DB');
+    
+    const dbHost = mongoose.connection.host;
+    const dbName = mongoose.connection.name;
+    console.log(`Connected to DB [Host: ${dbHost} | Database: ${dbName}]`);
+
+    if (wantsReset) {
+      if (!canReset) {
+        console.error('\n[SAFETY ABORT] You requested a data reset, but failed to provide the necessary safety confirmations.');
+        console.error(`Target Database: ${dbName} @ ${dbHost}`);
+        console.error('To intentionally PURGE ALL DATA and re-seed, you MUST provide BOTH flags:');
+        console.error('  node seed.js --force-reset --confirm-reset\n');
+        process.exit(1);
+      }
+      
+      console.warn(`\n[WARNING] INITIATING FULL DATA PURGE on Database: '${dbName}' @ '${dbHost}'...`);
+      await Standard.deleteMany({});
+      console.log('Collection cleared successfully.\n');
+    }
 
     console.log('Loading AI model for embeddings (this may take a moment on first run)...');
     const extractor = await getPipeline();
     console.log('Model loaded.');
 
-    console.log('Clearing old data...');
-    await Standard.deleteMany({});
-
-    console.log('Generating embeddings and inserting data...');
+    console.log('Generating embeddings and safely inserting data (Non-destructive)...');
     for (const item of seedData) {
+      // Check if it already exists before generating expensive embeddings
+      const existing = await Standard.findOne({ isNumber: item.isNumber });
+      if (existing) {
+        console.log(`Skipped existing standard (already seeded): ${item.isNumber}`);
+        continue;
+      }
+
       // Combine title and scope for a richer text representation
       const textToEmbed = `${item.title}. ${item.scope} ${item.category}`;
       item.embedding = await generateEmbedding(textToEmbed, extractor);
       
-      const newStandard = new Standard(item);
-      await newStandard.save();
-      console.log(`Saved: ${item.isNumber}`);
+      await Standard.updateOne(
+        { isNumber: item.isNumber },
+        { $setOnInsert: item },
+        { upsert: true }
+      );
+      
+      console.log(`Saved new standard: ${item.isNumber}`);
     }
 
     console.log('Seeding complete!');
