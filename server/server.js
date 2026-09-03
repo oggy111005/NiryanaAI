@@ -4,6 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 const Standard = require('./models/Standard');
@@ -559,7 +560,81 @@ app.get('/api/history', authenticateToken, async (req, res) => {
   }
 });
 
-// 7. POST /api/chat (LLM integration)
+// 7. POST /api/explain — Recommendation Explainability
+//
+// Accepts { standardId, userQuery } and returns a short, grounded explanation
+// of why the recommended standard applies to the user's procurement specification.
+//
+// When a Gemini API key is configured:
+//   - Sends only the standard's own metadata to Gemini (no invented facts)
+//   - Instructs Gemini to cite only what is in the scope text
+//   - Caps output to 3-4 sentences to keep it readable
+//
+// When no Gemini API key is set:
+//   - Returns a deterministic template-based explanation built from scope
+//   - UI never shows a broken state
+app.post('/api/explain', async (req, res) => {
+  try {
+    const { standardId, userQuery } = req.body;
+
+    if (!standardId || !userQuery || !userQuery.trim()) {
+      return res.status(400).json({ error: 'standardId and userQuery are required' });
+    }
+
+    const standard = await Standard.findById(standardId).select('-embedding').lean();
+    if (!standard) {
+      return res.status(404).json({ error: 'Standard not found' });
+    }
+
+    const { isNumber, title, category, scope, certifications = [], latestVersion } = standard;
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey) {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const prompt = `You are a Bureau of Indian Standards (BIS) compliance assistant helping a procurement officer understand why a specific standard applies to their requirement.
+
+The officer searched for: "${userQuery.trim()}"
+
+The recommended Indian Standard is:
+- IS Number: ${isNumber} (Latest: ${latestVersion || 'N/A'})
+- Title: ${title}
+- Category: ${category}
+- Scope: ${scope}
+- Required Certifications: ${certifications.length > 0 ? certifications.join(', ') : 'None listed'}
+
+Write a 3-4 sentence explanation of why this standard is relevant to the officer's search query.
+Rules:
+1. Only cite information present in the scope text above. Do NOT invent clause numbers or details not in the scope.
+2. Mention the specific aspect of the search query that matches the standard's coverage.
+3. If certifications are listed, briefly note what compliance scheme applies.
+4. Write in plain English suitable for a government procurement officer.
+5. Do not start with "This standard" - vary the opening.`;
+
+      const result = await model.generateContent(prompt);
+      const explanation = result.response.text().trim();
+      return res.json({ explanation, source: 'gemini' });
+    }
+
+    // --- FALLBACK: Template-based explanation (no API key needed) ---
+    const certNote = certifications.length > 0
+      ? ` Compliance requires: ${certifications.join(', ')}.`
+      : '';
+    const fallback = `${isNumber} — ${title} — is applicable to your query because its scope covers the technical domain you specified. `
+      + `Specifically, it governs: "${scope.substring(0, 180).trim()}${scope.length > 180 ? '...' : ''}"${certNote} `
+      + `Configure your Gemini API key in server/.env for a detailed clause-level explanation.`;
+
+    return res.json({ explanation: fallback, source: 'fallback' });
+
+  } catch (err) {
+    console.error('Explain error:', err);
+    res.status(500).json({ error: 'Server error generating explanation' });
+  }
+});
+
+// 8. POST /api/chat (LLM integration)
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;

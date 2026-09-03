@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const mongoose = require('mongoose');
 const Standard = require('../models/Standard');
@@ -122,7 +122,8 @@ test('4. Duplicate collision detection: Audit script reports duplicates without 
   const collection = mongoose.connection.db.collection('standards');
   await collection.deleteMany({});
 
-  // Drop index if already present
+  // Ensure mongoose model init is complete before dropping index to prevent race condition
+  await Standard.init();
   try { await collection.dropIndex('normalizedIsNumber_1'); } catch {}
 
   // Intentionally insert two documents with different raw strings that normalize to the same key

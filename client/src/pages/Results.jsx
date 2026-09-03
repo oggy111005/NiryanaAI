@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search } from 'lucide-react';
+import axios from 'axios';
+import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search, Lightbulb, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 export default function Results() {
   const location = useLocation();
@@ -17,6 +18,30 @@ export default function Results() {
   }
 
   const { primary, related } = results;
+
+  // --- Explainability state ---
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState('');
+
+  const fetchExplanation = async () => {
+    if (explanation) { setExplainOpen(o => !o); return; } // already fetched
+    setExplainOpen(true);
+    setExplainLoading(true);
+    setExplainError('');
+    try {
+      const res = await axios.post('http://localhost:5000/api/explain', {
+        standardId: primary._id,
+        userQuery: query
+      });
+      setExplanation(res.data.explanation);
+    } catch {
+      setExplainError('Could not load explanation. Please try again.');
+    } finally {
+      setExplainLoading(false);
+    }
+  };
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -101,6 +126,46 @@ export default function Results() {
             </div>
           </div>
           
+          {/* Recommendation Explainability (Audit Trail) */}
+          <div className="mt-6 border-t border-gray-100 pt-4">
+            <button
+              onClick={fetchExplanation}
+              type="button"
+              className="flex items-center text-sm font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 px-3.5 py-2 rounded-md transition-colors border border-amber-200"
+            >
+              <Lightbulb size={16} className="mr-2 text-amber-600" />
+              <span>Why was this standard recommended?</span>
+              {explainLoading ? (
+                <Loader2 size={15} className="ml-2 animate-spin text-amber-600" />
+              ) : explainOpen ? (
+                <ChevronUp size={15} className="ml-2" />
+              ) : (
+                <ChevronDown size={15} className="ml-2" />
+              )}
+            </button>
+
+            {explainOpen && (
+              <div className="mt-3 p-4 bg-amber-50/60 rounded-lg border border-amber-200 text-sm text-gray-800 leading-relaxed">
+                {explainLoading ? (
+                  <div className="flex items-center text-gray-600 py-1">
+                    <Loader2 size={16} className="animate-spin mr-2 text-amber-600" />
+                    <span>Analyzing match against standard specifications...</span>
+                  </div>
+                ) : explainError ? (
+                  <div className="text-red-600 text-xs">{explainError}</div>
+                ) : (
+                  <div>
+                    <div className="font-semibold text-amber-900 mb-1 flex items-center">
+                      <Shield size={14} className="mr-1.5 text-amber-700" />
+                      Procurement Compliance Rationale:
+                    </div>
+                    <p className="text-gray-700">{explanation}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="mt-6 flex justify-end">
             <Link to={`/standard/${primary._id}`} className={`${primary.matchType ? 'text-green-600 hover:text-green-800' : 'text-primary hover:text-blue-800'} font-medium text-sm flex items-center hover:underline`}>
               View Full Details &rarr;
