@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const multer = require('multer');
@@ -261,8 +261,36 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       return res.status(400).json({ error: 'Query is required' });
     }
 
-    // Save history (optional guest tracking)
-    await History.create({ query });
+    // Save history with user tracking
+    const userId = req.user ? req.user.username : 'guest';
+    await History.create({ query, userId });
+
+    // --- EXACT MATCH PRECEDENCE ---
+    const normalizedQuery = query.toLowerCase().replace(/\s+/g, '');
+    
+    // Check for exact normalized match (e.g. "is269:2015")
+    const exactMatch = await Standard.findOne({ normalizedIsNumber: normalizedQuery }).select('-embedding').lean();
+    
+    // Check for base match if no exact match (e.g. "is269")
+    const baseMatch = !exactMatch && !normalizedQuery.includes(':') 
+      ? await Standard.findOne({ baseIsNumber: normalizedQuery }).sort({ latestVersion: -1 }).select('-embedding').lean() 
+      : null;
+
+    const matchedStd = exactMatch || baseMatch;
+
+    if (matchedStd) {
+      matchedStd.matchType = 'Exact IS number match';
+      matchedStd.similarityScore = 1.0; // Max out score since it's exact
+
+      // Fetch related standards by category to populate the UI
+      const related = await Standard.find({ 
+        category: matchedStd.category, 
+        _id: { $ne: matchedStd._id } 
+      }).limit(4).select('-embedding').lean();
+
+      return res.json({ primary: matchedStd, related });
+    }
+    // --- END EXACT MATCH PRECEDENCE ---
 
     if (!extractor) {
       return res.status(503).json({ error: 'AI model is still loading, please try again in a few seconds.' });
@@ -279,6 +307,17 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
 
     if (ranked.length === 0) {
       return res.json({ primary: null, related: [] });
+    }
+
+    // --- CONFIDENCE CUTOFF THRESHOLD ---
+    const THRESHOLD = 0.40;
+    
+    if (ranked[0].similarityScore < THRESHOLD) {
+      return res.json({ 
+        primary: null, 
+        related: [], 
+        message: "No confident Indian Standard match found." 
+      });
     }
 
     const primary = ranked[0];
@@ -305,10 +344,30 @@ app.get('/api/standards/:id', async (req, res) => {
   }
 });
 
+// --- HELPER FUNCTIONS ---
+function escapeRegex(text) {
+  // Prevent ReDoS and Regex Injection by escaping special characters
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 // 3. GET /api/standards
 app.get('/api/standards', async (req, res) => {
   try {
-    const stds = await Standard.find().select('-embedding');
+    const { search } = req.query;
+    let query = {};
+    
+    if (search) {
+      const safeSearch = escapeRegex(search);
+      query = {
+        $or: [
+          { isNumber: { $regex: safeSearch, $options: 'i' } },
+          { title: { $regex: safeSearch, $options: 'i' } }
+        ]
+      };
+    }
+    
+    // Use the safe query and limit results to prevent massive payloads
+    const stds = await Standard.find(query).select('-embedding').limit(200);
     res.json(stds);
   } catch (err) {
     res.status(500).json({ error: 'Server error fetching standards catalog' });
