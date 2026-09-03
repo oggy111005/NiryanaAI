@@ -23,16 +23,29 @@ This is a beginner-friendly MERN stack prototype designed to help procurement of
    ```bash
    npm install
    ```
-3. (Optional) Create a `.env` file in the `server` directory:
-   ```env
-   MONGODB_URI=mongodb://127.0.0.1:27017/is-recommend
-   PORT=5000
-   ```
-4. **Seed the Database & Generate Embeddings**:
-   This step is crucial. It populates the database and downloads the small AI model (which takes a moment on the first run).
+3. Configure Environment (`.env`):
+   Copy `.env.example` to `.env` in the `server` directory and set your `JWT_SECRET`:
    ```bash
-   node seed.js
+   cp .env.example .env
    ```
+   Required variables:
+   ```env
+   PORT=5000
+   MONGODB_URI=mongodb://127.0.0.1:27017/is-recommend-changes
+   JWT_SECRET=your_secure_jwt_secret
+   CORS_ORIGIN=http://localhost:5173
+   ```
+
+4. **Initial Admin Bootstrapping (One-Time Setup)**:
+   To create the first administrator account safely without hardcoded credentials:
+   ```bash
+   # In Windows PowerShell:
+   $env:BOOTSTRAP_ADMIN_USERNAME="admin"
+   $env:BOOTSTRAP_ADMIN_PASSWORD="your_secure_password"
+   node bootstrap-admin.js
+   ```
+   *Note: The bootstrap script only creates an admin if no admin account currently exists. It will safely refuse execution if an admin is already present.*
+
 5. Start the backend server:
    ```bash
    npm run dev
@@ -40,6 +53,7 @@ This is a beginner-friendly MERN stack prototype designed to help procurement of
    node server.js
    ```
    The backend should now be running on `http://localhost:5000`.
+
 
 ### 2. Frontend Setup
 1. Open a new terminal and navigate to the `client` directory:
