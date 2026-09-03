@@ -49,15 +49,36 @@ export default function DatabaseView() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {standards.map((std) => (
                 <tr key={std._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">{std.isNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                    <div className="flex items-center space-x-2">
+                      <span>{std.isNumber}</span>
+                      {std.isDemo && (
+                        <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-300">
+                          DEMO
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-700 max-w-xs truncate" title={std.title}>{std.title}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.category}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{std.latestVersion || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${
+                      std.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                      std.status === 'draft' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                      std.status === 'superseded' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                      std.status === 'withdrawn' ? 'bg-red-100 text-red-800 border-red-200' :
+                      'bg-gray-100 text-gray-800 border-gray-200'
+                    }`}>
+                      {std.status || 'active'}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

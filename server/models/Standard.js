@@ -19,18 +19,49 @@ const standardSchema = new mongoose.Schema({
   
   // Canonical Normalization Fields
   normalizedIsNumber: { type: String, required: true, unique: true },
-  baseIsNumber: { type: String, index: true }
+  baseIsNumber: { type: String, index: true },
+
+  // Provenance and Lifecycle Fields
+  status: {
+    type: String,
+    enum: ['draft', 'active', 'superseded', 'withdrawn'],
+    default: 'active',
+    index: true
+  },
+  isDemo: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  sourceUrl: {
+    type: String,
+    default: null
+  },
+  verifiedDate: {
+    type: Date,
+    default: null
+  }
 });
 
-// Middleware to normalize IS Number before Validation
+// Middleware to normalize IS Number and set provenance before Validation
 standardSchema.pre('validate', function() {
   if (this.isModified('isNumber') && this.isNumber) {
     this.normalizedIsNumber = this.isNumber.toLowerCase().replace(/\s+/g, '');
     this.baseIsNumber = this.normalizedIsNumber.split(':')[0];
   }
+  if (this.isNumber && this.isNumber.startsWith('DEMO-')) {
+    this.isDemo = true;
+    if (!this.status || this.status === 'active') {
+      this.status = 'draft';
+    }
+    this.sourceUrl = null;
+  } else {
+    if (this.isDemo === undefined) this.isDemo = false;
+    if (!this.status) this.status = 'active';
+  }
 });
 
-// Middleware to normalize IS Number on Upsert/Update
+// Middleware to normalize IS Number and set provenance on Upsert/Update
 standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
   const update = this.getUpdate();
   let rawIsNumber = null;
@@ -42,14 +73,28 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
   if (rawIsNumber) {
     const normalized = rawIsNumber.toLowerCase().replace(/\s+/g, '');
     const base = normalized.split(':')[0];
+    const isDemo = rawIsNumber.startsWith('DEMO-');
     
     if (update.$setOnInsert && update.$setOnInsert.isNumber) {
       update.$setOnInsert.normalizedIsNumber = normalized;
       update.$setOnInsert.baseIsNumber = base;
+      if (isDemo) {
+        update.$setOnInsert.isDemo = true;
+        update.$setOnInsert.status = 'draft';
+        update.$setOnInsert.sourceUrl = null;
+      } else {
+        if (update.$setOnInsert.isDemo === undefined) update.$setOnInsert.isDemo = false;
+        if (!update.$setOnInsert.status) update.$setOnInsert.status = 'active';
+      }
     } else {
       if (!update.$set) update.$set = {};
       update.$set.normalizedIsNumber = normalized;
       update.$set.baseIsNumber = base;
+      if (isDemo) {
+        update.$set.isDemo = true;
+        update.$set.status = 'draft';
+        update.$set.sourceUrl = null;
+      }
     }
   }
 });
