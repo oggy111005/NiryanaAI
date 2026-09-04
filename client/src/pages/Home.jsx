@@ -12,6 +12,27 @@ const EXAMPLE_QUERIES = [
   "Drinking water quality turbidity and bacteria limits",
 ];
 
+const CONTENT = {
+  en: {
+    title: "Find the Right Indian Standard",
+    subtitle: "Describe your product or specification in plain English or Hindi. AI will find the most relevant BIS standard.",
+    placeholder: "e.g., 'Safety of toys for children...' or type an IS number like 'IS 456'",
+    tip: 'Tip: supports Hindi — try "सीमेंट" or "स्टील"',
+    analyze: "Analyze",
+    analyzing: "Analyzing...",
+    tryThese: "Try These Queries"
+  },
+  hi: {
+    title: "सही भारतीय मानक (IS) खोजें",
+    subtitle: "अपने उत्पाद या विनिर्देश का अंग्रेजी या हिंदी में वर्णन करें। AI सबसे उपयुक्त BIS मानक खोजेगा।",
+    placeholder: "उदाहरण: 'बच्चों के खिलौनों की सुरक्षा...' या 'IS 456' जैसा कोई IS नंबर टाइप करें",
+    tip: 'सुझाव: आप हिंदी में भी खोज सकते हैं जैसे "सीमेंट" या "स्टील"',
+    analyze: "विश्लेषण करें",
+    analyzing: "विश्लेषण हो रहा है...",
+    tryThese: "ये खोज कर देखें"
+  }
+};
+
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -22,6 +43,7 @@ function useDebounce(value, delay) {
 }
 
 export default function Home() {
+  const [lang, setLang] = useState('en');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +55,8 @@ export default function Home() {
   const wrapperRef = useRef(null);
   const textareaRef = useRef(null);
   const debouncedQuery = useDebounce(query, 280);
+
+  const t = CONTENT[lang];
 
   // Fetch suggestions when query changes
   useEffect(() => {
@@ -121,11 +145,29 @@ export default function Home() {
 
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
+      {/* Language Toggle */}
+      <div className="flex justify-end mb-4">
+        <div className="bg-white border border-gray-200 rounded-full p-1 inline-flex shadow-sm">
+          <button
+            onClick={() => setLang('en')}
+            className={`px-3 py-1 text-sm rounded-full font-medium transition-colors ${lang === 'en' ? 'bg-primary text-white' : 'text-gray-600 hover:text-primary'}`}
+          >
+            English
+          </button>
+          <button
+            onClick={() => setLang('hi')}
+            className={`px-3 py-1 text-sm rounded-full font-medium transition-colors ${lang === 'hi' ? 'bg-primary text-white' : 'text-gray-600 hover:text-primary'}`}
+          >
+            हिंदी
+          </button>
+        </div>
+      </div>
+
       {/* Hero */}
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-primary mb-4">Find the Right Indian Standard</h1>
+        <h1 className="text-4xl font-bold text-primary mb-4">{t.title}</h1>
         <p className="text-lg text-gray-600">
-          Describe your product or specification in plain English or Hindi. AI will find the most relevant BIS standard.
+          {t.subtitle}
         </p>
       </div>
 
@@ -136,7 +178,7 @@ export default function Home() {
             ref={textareaRef}
             className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
             rows="3"
-            placeholder="e.g., 'Safety of toys for children, migration of chemical elements...' or type an IS number like 'IS 456'"
+            placeholder={t.placeholder}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -197,16 +239,16 @@ export default function Home() {
         {error && <div className="text-red-500 mt-2 text-sm">{error}</div>}
 
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-gray-400">Tip: supports Hindi — try "सीमेंट" or "स्टील"</span>
+          <span className="text-xs text-gray-400">{t.tip}</span>
           <button
             onClick={() => handleSearch()}
             disabled={loading || !query.trim()}
             className="bg-primary hover:bg-blue-900 text-white px-6 py-2 rounded-md font-medium flex items-center gap-2 disabled:opacity-50 transition-colors"
           >
             {loading ? (
-              <><Loader2 className="animate-spin" size={18} /> Analyzing...</>
+              <><Loader2 className="animate-spin" size={18} /> {t.analyzing}</>
             ) : (
-              <><Search size={18} /> Analyze</>
+              <><Search size={18} /> {t.analyze}</>
             )}
           </button>
         </div>
@@ -214,7 +256,7 @@ export default function Home() {
 
       {/* Example Query Chips */}
       <div className="mt-8">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Try These Queries</h3>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{t.tryThese}</h3>
         <div className="flex flex-wrap gap-2">
           {EXAMPLE_QUERIES.map((q, idx) => (
             <button
