@@ -47,7 +47,7 @@ export default function Login({ role }) {
           {role === 'admin' ? 'Admin Login' : 'User Login'}
         </h2>
         <p className="text-gray-500 mt-2">
-          {role === 'admin' ? 'Demo: admin / admin' : 'Demo: user / password'}
+          {role === 'admin' ? 'Demo: admin / adminpassword' : 'Demo: demouser / userpassword'}
         </p>
       </div>
 

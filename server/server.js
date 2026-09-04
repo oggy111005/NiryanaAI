@@ -39,6 +39,77 @@ const upload = multer({
   }
 });
 
+// 6. POST /api/analyze-tender (Tender Document Specification Analyzer - SIH Phase 5)
+app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'File upload error' });
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No tender file uploaded' });
+
+    let text = '';
+    const ext = require('path').extname(req.file.originalname || '').toLowerCase();
+    
+    if (ext === '.pdf' || req.file.mimetype === 'application/pdf') {
+      text = await extractTextFromPdf(req.file.buffer);
+    } else {
+      text = req.file.buffer.toString('utf-8');
+    }
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'Could not extract text from tender document' });
+    }
+
+    if (!extractor) {
+      return res.status(503).json({ error: 'AI model is still loading' });
+    }
+
+    // Heuristic: Extract "clauses" by splitting on double newlines and filtering short/irrelevant ones
+    const rawBlocks = text.split(/\n\s*\n/);
+    const clauses = rawBlocks
+      .map(b => b.trim())
+      .filter(b => b.length > 50 && b.length < 1000)
+      .slice(0, 5); // Limit to top 5 clauses for demo performance
+
+    if (clauses.length === 0) {
+      clauses.push(text.substring(0, 500));
+    }
+
+    const allStandardsWithEmb = await Standard.find().select('+embedding').lean();
+    const analysisResults = [];
+
+    for (const clause of clauses) {
+      const output = await extractor(clause, { pooling: 'mean', normalize: true });
+      const queryEmb = Array.from(output.data);
+
+      const ranked = allStandardsWithEmb.map(std => {
+        const score = cosineSimilarity(queryEmb, std.embedding);
+        return { _id: std._id, isNumber: std.isNumber, title: std.title, score };
+      }).sort((a, b) => b.score - a.score);
+
+      // Apply threshold
+      const matches = ranked.filter(r => r.score > 0.35).slice(0, 3);
+
+      analysisResults.push({
+        clauseText: clause,
+        recommendedStandards: matches
+      });
+    }
+
+    res.json({
+      documentName: req.file.originalname,
+      analyzedClauses: analysisResults.length,
+      results: analysisResults
+    });
+
+  } catch (err) {
+    console.error('Tender analysis error:', err);
+    res.status(500).json({ error: 'Server error during tender analysis' });
+  }
+});
+
 // Helper for extracting text from PDF using pdf-parse v2 API
 async function extractTextFromPdf(buffer) {
   const { PDFParse } = require('pdf-parse');
@@ -58,7 +129,8 @@ let extractor = null;
 async function initPipeline() {
   try {
     const { pipeline } = await import('@xenova/transformers');
-    extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+    // Switched to multilingual model for Phase 5 SIH requirements (Hindi/Regional support)
+    extractor = await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
     console.log('AI Model loaded for inference.');
   } catch (e) {
     console.error('Failed to load transformer model:', e);
@@ -342,11 +414,11 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
     }
 
     // --- CONFIDENCE CUTOFF THRESHOLD ---
-    // Provisional default: 0.40. Override with RECOMMENDATION_CONFIDENCE_THRESHOLD in .env
+    // Provisional default: 0.35. Override with RECOMMENDATION_CONFIDENCE_THRESHOLD in .env
     // This value has NOT been calibrated against a benchmark dataset and must be
     // adjusted after evaluation before production deployment.
     const rawThreshold = parseFloat(process.env.RECOMMENDATION_CONFIDENCE_THRESHOLD);
-    const THRESHOLD = Number.isFinite(rawThreshold) ? rawThreshold : 0.40;
+    const THRESHOLD = Number.isFinite(rawThreshold) ? rawThreshold : 0.35;
 
     if (ranked[0].similarityScore < THRESHOLD) {
       return res.json({

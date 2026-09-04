@@ -5,8 +5,8 @@ const Standard = require('./models/Standard');
 // Dynamically import the transformers package
 async function getPipeline() {
   const { pipeline } = await import('@xenova/transformers');
-  // Load the feature extraction pipeline, which generates embeddings
-  return await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  // Load the feature extraction pipeline, which generates embeddings (Multilingual)
+  return await pipeline('feature-extraction', 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
 }
 
 const seedData = [
