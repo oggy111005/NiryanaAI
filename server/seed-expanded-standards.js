@@ -26,7 +26,7 @@ const newStandards = [
       { isNumber: "IS 1205", title: "Determination of softening point of bitumen", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+73",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+73",
     verifiedDate: new Date("2024-02-01T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -35,13 +35,13 @@ const newStandards = [
         clauseNumber: "4.1",
         title: "Viscosity Grading and Pavement Classification",
         text: "Paving bitumen shall be classified into four viscosity grades: VG-10, VG-20, VG-30 and VG-40, suitable for varying climatic and traffic conditions in road and highway construction.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+73#clause-4.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+73#clause-4.1"
       },
       {
         clauseNumber: "5.2",
         title: "Kinematic Viscosity and Softening Point",
         text: "Kinematic viscosity at 135 °C shall not be less than 350 cSt for VG-30 grade bitumen, with softening point minimum 47 °C.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+73#clause-5.2"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+73#clause-5.2"
       }
     ]
   },
@@ -57,7 +57,7 @@ const newStandards = [
       { isNumber: "IS 383", title: "Coarse and fine aggregate for concrete", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15658",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15658",
     verifiedDate: new Date("2024-01-10T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -66,13 +66,13 @@ const newStandards = [
         clauseNumber: "6.1",
         title: "Compressive Strength of Paving Blocks",
         text: "Average compressive strength of precast concrete paving blocks shall not be less than 30 MPa for pedestrian traffic and 50 MPa for heavy city roads and industrial traffic.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15658#clause-6.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15658#clause-6.1"
       },
       {
         clauseNumber: "6.3",
         title: "Water Absorption and Abrasion Resistance",
         text: "Water absorption shall not exceed 6 percent by mass, and total wear in the abrasion test shall not exceed 2 mm for road paving applications.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15658#clause-6.3"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15658#clause-6.3"
       }
     ]
   },
@@ -87,7 +87,7 @@ const newStandards = [
       { isNumber: "IS 2386", title: "Methods of test for aggregates for concrete", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+383",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+383",
     verifiedDate: new Date("2024-01-20T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -96,7 +96,7 @@ const newStandards = [
         clauseNumber: "4.3",
         title: "Crushing Value and Impact Value for Pavements",
         text: "Aggregate impact value shall not exceed 30 percent for concrete wearing surfaces including runways and road pavements, and 45 percent for non-wearing surfaces.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+383#clause-4.3"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+383#clause-4.3"
       }
     ]
   },
@@ -111,7 +111,7 @@ const newStandards = [
       { isNumber: "IS 73", title: "Paving bitumen specification", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1203",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1203",
     verifiedDate: new Date("2023-11-15T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -120,7 +120,7 @@ const newStandards = [
         clauseNumber: "3.1",
         title: "Penetration Measurement Procedure",
         text: "Penetration is expressed as the distance in tenths of a millimeter that a standard needle vertically penetrates the bituminous sample under 100g load for 5 seconds at 25 °C.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1203#clause-3.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1203#clause-3.1"
       }
     ]
   },
@@ -138,7 +138,7 @@ const newStandards = [
       { isNumber: "IS 1786", title: "High strength deformed steel bars", type: "Related Product" }
     ],
     certifications: ["BIS Certified Standard"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+456",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+456",
     verifiedDate: new Date("2024-01-10T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -147,13 +147,13 @@ const newStandards = [
         clauseNumber: "6.1",
         title: "Grades of Concrete",
         text: "Concrete shall be in designated grades M15, M20, M25, M30, M35, M40 through M80, where characteristic compressive strength is determined at 28 days on 150 mm cubes.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+456#clause-6.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+456#clause-6.1"
       },
       {
         clauseNumber: "26.4",
         title: "Nominal Cover to Reinforcement",
         text: "Nominal cover for concrete members to prevent corrosion of steel reinforcement shall be minimum 20 mm for slabs, 25 mm for beams, 40 mm for columns and 50 mm for foundations.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+456#clause-26.4"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+456#clause-26.4"
       }
     ]
   },
@@ -169,7 +169,7 @@ const newStandards = [
       { isNumber: "IS 1786", title: "High strength deformed steel bars", type: "Related Product" }
     ],
     certifications: ["BIS Certified Standard"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+800",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+800",
     verifiedDate: new Date("2024-01-15T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -178,7 +178,7 @@ const newStandards = [
         clauseNumber: "5.1",
         title: "Structural Steel Material Properties",
         text: "All structural steel members shall conform to IS 2062. Design yield stress fy and ultimate tensile strength fu shall be verified from mill test certificates.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+800#clause-5.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+800#clause-5.1"
       }
     ]
   },
@@ -193,7 +193,7 @@ const newStandards = [
       { isNumber: "IS 456", title: "Plain and reinforced concrete code", type: "Design Code" }
     ],
     certifications: ["BIS Certified Standard"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+10262",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+10262",
     verifiedDate: new Date("2023-12-01T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -202,7 +202,7 @@ const newStandards = [
         clauseNumber: "4.2",
         title: "Target Mean Strength Calculation",
         text: "Target mean compressive strength f'ck = fck + 1.65 x s, where s is standard deviation according to Table 1 based on quality control level.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+10262#clause-4.2"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+10262#clause-4.2"
       }
     ]
   },
@@ -217,7 +217,7 @@ const newStandards = [
       { isNumber: "IS 3495", title: "Methods of tests of burnt clay building bricks", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1077",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1077",
     verifiedDate: new Date("2023-10-05T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -226,13 +226,13 @@ const newStandards = [
         clauseNumber: "7.1",
         title: "Compressive Strength of Bricks",
         text: "Common burnt clay building bricks shall have minimum compressive strength of 3.5 N/mm² for class 3.5 up to 35 N/mm² for class 35.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1077#clause-7.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1077#clause-7.1"
       },
       {
         clauseNumber: "7.2",
         title: "Water Absorption Limits",
         text: "Water absorption shall not be more than 20 percent by weight for bricks up to class 12.5 and 15 percent for higher classes after 24 hours cold water immersion.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1077#clause-7.2"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1077#clause-7.2"
       }
     ]
   },
@@ -249,7 +249,7 @@ const newStandards = [
       { isNumber: "IS 2530", title: "Methods of test for polyethylene molding materials", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+4984",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+4984",
     verifiedDate: new Date("2024-01-25T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -258,13 +258,13 @@ const newStandards = [
         clauseNumber: "5.1",
         title: "Raw Material Grade PE 100",
         text: "HDPE pipe shall be manufactured from carbon black compound PE 100 with minimum required strength (MRS) of 10.0 MPa at 20 °C for 50 years design life.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+4984#clause-5.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+4984#clause-5.1"
       },
       {
         clauseNumber: "8.1",
         title: "Hydrostatic Pressure Resistance",
         text: "The pipe shall not burst or weep when subjected to internal hydrostatic pressure test for 100 hours at 80 °C and 165 hours at 80 °C.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+4984#clause-8.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+4984#clause-8.1"
       }
     ]
   },
@@ -279,7 +279,7 @@ const newStandards = [
       { isNumber: "IS 12288", title: "Code of practice for use and laying of ductile iron pipes", type: "Installation Code" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+8329",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+8329",
     verifiedDate: new Date("2023-12-10T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -288,7 +288,7 @@ const newStandards = [
         clauseNumber: "9.1",
         title: "Tensile Strength and Elongation of DI Pipes",
         text: "Minimum tensile strength of centrifugally cast ductile iron pipe body shall be 420 MPa, with minimum elongation at break of 10 percent.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+8329#clause-9.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+8329#clause-9.1"
       }
     ]
   },
@@ -303,7 +303,7 @@ const newStandards = [
       { isNumber: "IS 4736", title: "Hot-dip zinc coatings on mild steel tubes", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1239",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1239",
     verifiedDate: new Date("2023-11-20T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -312,7 +312,7 @@ const newStandards = [
         clauseNumber: "8.1",
         title: "Hydrostatic Test for Steel Tubes",
         text: "Each tube shall be tested hydrostatically at the manufacturer's works to a test pressure of 5.0 MPa without showing leakage or failure.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+1239#clause-8.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1239#clause-8.1"
       }
     ]
   },
@@ -330,7 +330,7 @@ const newStandards = [
       { isNumber: "IS 5831", title: "PVC insulation and sheath of electric cables", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+694",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+694",
     verifiedDate: new Date("2024-02-05T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -339,13 +339,13 @@ const newStandards = [
         clauseNumber: "6.1",
         title: "Conductor Resistance and Annealed Copper",
         text: "Conductors shall consist of plain annealed high-conductivity copper wires complying with IS 8130. Maximum electrical resistance shall not exceed specified table limits.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+694#clause-6.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+694#clause-6.1"
       },
       {
         clauseNumber: "9.2",
         title: "High Voltage Spark Test",
         text: "Cables shall withstand a high voltage spark test of 6 kV AC RMS without insulation breakdown.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+694#clause-9.2"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+694#clause-9.2"
       }
     ]
   },
@@ -360,7 +360,7 @@ const newStandards = [
       { isNumber: "IS 3975", title: "Low carbon galvanized steel wires for armouring cables", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+7098",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+7098",
     verifiedDate: new Date("2023-10-15T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -369,7 +369,7 @@ const newStandards = [
         clauseNumber: "15.1",
         title: "Armour Resistance and Mechanical Protection",
         text: "Armouring shall consist of galvanized steel strip or round wire providing complete mechanical protection against soil and mechanical compaction.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+7098#clause-15.1"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+7098#clause-15.1"
       }
     ]
   },
@@ -384,7 +384,7 @@ const newStandards = [
       { isNumber: "IS/IEC 61730-1", title: "Photovoltaic module safety qualification", type: "Safety Standard" }
     ],
     certifications: ["BIS CRS Mark", "MNRE Approved"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+14286",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+14286",
     verifiedDate: new Date("2024-01-18T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -393,7 +393,7 @@ const newStandards = [
         clauseNumber: "10.11",
         title: "Thermal Cycling and Damp Heat Testing",
         text: "Solar PV modules shall undergo 200 thermal cycles (-40 °C to +85 °C) and 1000 hours damp heat test at 85 °C / 85% RH with power degradation less than 5 percent.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+14286#clause-10.11"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+14286#clause-10.11"
       }
     ]
   },
@@ -410,7 +410,7 @@ const newStandards = [
       { isNumber: "IS 4947", title: "Gas cartridges for use in fire extinguishers", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15683",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15683",
     verifiedDate: new Date("2024-01-30T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -419,7 +419,7 @@ const newStandards = [
         clauseNumber: "6.2",
         title: "Burst Pressure and Hydraulic Test",
         text: "The cylinder body of the extinguisher shall withstand hydraulic test pressure of 3.0 MPa for minimum 30 seconds without leakage or distortion.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15683#clause-6.2"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15683#clause-6.2"
       }
     ]
   },
@@ -434,7 +434,7 @@ const newStandards = [
       { isNumber: "IS 15298(Part 1)", title: "Test methods for footwear", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
-    sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15298",
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15298",
     verifiedDate: new Date("2023-12-20T00:00:00.000Z"),
     status: "active",
     isDemo: false,
@@ -443,7 +443,7 @@ const newStandards = [
         clauseNumber: "5.3",
         title: "Toe Protection Impact Resistance",
         text: "Safety footwear toe caps shall withstand an impact energy of minimum 200 Joules and compression load of 15 kN with clearance under the cap meeting Table 4.",
-        sourceUrl: "https://standardsbis.bsbedge.com/BIS_SearchStandard.aspx?Standard_Number=IS+15298#clause-5.3"
+        sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15298#clause-5.3"
       }
     ]
   }
@@ -487,6 +487,8 @@ async function seedExpanded() {
           embedding: stdDoc.embedding,
           sourceUrl: stdDoc.sourceUrl,
           verifiedDate: stdDoc.verifiedDate,
+          publishedOn: stdDoc.publishedOn,
+          latestReviewedYear: stdDoc.latestReviewedYear,
           clauses: stdDoc.clauses,
           status: stdDoc.status,
           isDemo: false,

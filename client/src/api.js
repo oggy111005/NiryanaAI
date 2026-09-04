@@ -28,13 +28,18 @@ api.interceptors.request.use((config) => {
 
 /**
  * Ensures a BIS source URL routes reliably to the official working
- * Government of India BIS portal (bis.gov.in) rather than crashing on
- * broken legacy vendor portals like standardsbis.bsbedge.com.
+ * Government of India BIS standards portal (standards.bis.gov.in)
+ * with the search term pre-populated for instant lookup.
  */
 export function getCleanBisUrl(url, isNumber) {
-  if (!url || url.includes('standardsbis.bsbedge.com')) {
-    const q = isNumber ? encodeURIComponent(isNumber) : 'Indian%20Standard';
-    return `https://www.bis.gov.in/?s=${q}`;
+  const hash = url && url.includes('#') ? `#${url.split('#')[1]}` : '';
+  const searchParam = isNumber ? encodeURIComponent(isNumber.trim()) : '';
+
+  if (!url || url.includes('standardsbis.bsbedge.com') || url.includes('www.bis.gov.in/?s=')) {
+    if (searchParam) {
+      return `https://standards.bis.gov.in/website/know-your-standards?searchTerm=${searchParam}${hash}`;
+    }
+    return 'https://standards.bis.gov.in/website';
   }
   return url;
 }

@@ -13,8 +13,10 @@ async function fixBisUrls() {
   let updatedCount = 0;
 
   for (const std of standards) {
-    // Generate clean official BIS search URL for this IS Number
-    const officialUrl = `https://www.bis.gov.in/?s=${encodeURIComponent(std.isNumber)}`;
+    // Generate clean official BIS standards search URL for this IS Number
+    const officialUrl = std.isNumber
+      ? `https://standards.bis.gov.in/website/know-your-standards?searchTerm=${encodeURIComponent(std.isNumber)}`
+      : 'https://standards.bis.gov.in/website';
     
     std.sourceUrl = officialUrl;
     std.verifiedDate = std.verifiedDate || new Date('2024-01-15T00:00:00.000Z');
@@ -22,9 +24,7 @@ async function fixBisUrls() {
     // Update clauses as well
     if (std.clauses && Array.isArray(std.clauses)) {
       std.clauses.forEach(clause => {
-        if (!clause.sourceUrl || clause.sourceUrl.includes('standardsbis.bsbedge.com')) {
-          clause.sourceUrl = `${officialUrl}#clause-${clause.clauseNumber || ''}`;
-        }
+        clause.sourceUrl = `${officialUrl}#clause-${clause.clauseNumber || ''}`;
       });
     }
 

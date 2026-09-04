@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api';
+import api, { getCleanBisUrl } from '../api';
 import { Loader2, Database as DatabaseIcon, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function DatabaseView() {
@@ -51,6 +51,7 @@ export default function DatabaseView() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published / Reviewed</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified Date</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
               </tr>
@@ -85,6 +86,12 @@ export default function DatabaseView() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                    <div>{std.publishedOn ? new Date(std.publishedOn).getFullYear() : '—'}</div>
+                    {std.latestReviewedYear && (
+                      <div className="text-[11px] text-blue-600 font-medium">Rev: {std.latestReviewedYear}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
                     {std.verifiedDate ? (
                       <span className="inline-flex items-center gap-1 text-green-700 font-medium">
                         <CheckCircle size={12} className="text-green-600" />
@@ -101,7 +108,7 @@ export default function DatabaseView() {
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
                     {std.sourceUrl ? (
                       <a
-                        href={std.sourceUrl}
+                        href={getCleanBisUrl(std.sourceUrl, std.isNumber)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-secondary hover:text-teal-800 inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 bg-teal-50 rounded border border-teal-200 hover:bg-teal-100 transition-colors"

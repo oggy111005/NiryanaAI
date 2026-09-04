@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { getCleanBisUrl } from '../api';
-import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText } from 'lucide-react';
+import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText, Calendar } from 'lucide-react';
 
 export default function Detail() {
   const { id } = useParams();
@@ -201,6 +201,7 @@ export default function Detail() {
               <p className="text-gray-500 italic">No allied standards specified.</p>
             )}
           </section>
+
         </div>
 
         <div className="space-y-6">
@@ -212,9 +213,32 @@ export default function Detail() {
                 <span className="font-medium text-gray-800">{standard.category}</span>
               </div>
               <div>
-                <span className="block text-gray-500">Latest Version</span>
-                <span className="font-medium text-gray-800">{standard.latestVersion || 'N/A'}</span>
+                <span className="block text-gray-500">Amendments</span>
+                <span className="font-medium text-gray-800">
+                  {standard.amendments?.length ? `${standard.amendments.length} notified` : 'None'}
+                </span>
               </div>
+              {standard.publishedOn && (
+                <div>
+                  <span className="block text-gray-500 mb-1">Published On</span>
+                  <span className="font-medium text-gray-800">
+                    {new Date(standard.publishedOn).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+              )}
+              {standard.latestReviewedYear && (
+                <div>
+                  <span className="block text-gray-500 mb-1">Latest Reviewed</span>
+                  <span className="inline-flex items-center gap-1.5 text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded text-xs font-semibold">
+                    <Calendar size={13} className="text-blue-600" />
+                    Year {standard.latestReviewedYear}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="block text-gray-500 mb-1">Verified Date</span>
                 {standard.verifiedDate ? (

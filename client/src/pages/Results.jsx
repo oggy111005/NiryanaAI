@@ -74,9 +74,21 @@ export default function Results() {
               <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-200">
                 Category: {primary.category}
               </span>
-              <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">
-                Latest: {primary.latestVersion || 'N/A'}
-              </span>
+              {primary.publishedOn && (
+                <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-200">
+                  Published: {new Date(primary.publishedOn).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              )}
+              {primary.latestReviewedYear && (
+                <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-indigo-200">
+                  Reviewed: {primary.latestReviewedYear}
+                </span>
+              )}
+              {primary.amendments && primary.amendments.length > 0 && (
+                <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-amber-200">
+                  {primary.amendments.length} {primary.amendments.length === 1 ? 'Amendment' : 'Amendments'}
+                </span>
+              )}
               {primary.verifiedDate && (
                 <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
                   <CheckCircle size={12} /> Verified: {new Date(primary.verifiedDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}

@@ -673,6 +673,8 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       certifications,
       sourceUrl,
       verifiedDate,
+      publishedOn,
+      latestReviewedYear,
       clauses,
       status
     } = req.body;
@@ -715,6 +717,22 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       }
     }
 
+    let cleanPublishedOn = null;
+    if (publishedOn) {
+      const parsedPubDate = new Date(publishedOn);
+      if (!isNaN(parsedPubDate.getTime())) {
+        cleanPublishedOn = parsedPubDate;
+      }
+    }
+
+    let cleanLatestReviewedYear = null;
+    if (latestReviewedYear) {
+      const parsedYear = parseInt(latestReviewedYear, 10);
+      if (!isNaN(parsedYear) && parsedYear > 1900 && parsedYear < 2100) {
+        cleanLatestReviewedYear = parsedYear;
+      }
+    }
+
     const standardDoc = {
       isNumber: isNumber.trim(),
       title: title.trim(),
@@ -726,6 +744,8 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       certifications: Array.isArray(certifications) ? certifications : [],
       sourceUrl: cleanSourceUrl,
       verifiedDate: cleanVerifiedDate,
+      publishedOn: cleanPublishedOn,
+      latestReviewedYear: cleanLatestReviewedYear,
       embedding
     };
 
@@ -781,6 +801,8 @@ app.put('/api/standards/:id', authenticateToken, requireRole('admin'), async (re
       certifications,
       sourceUrl,
       verifiedDate,
+      publishedOn,
+      latestReviewedYear,
       clauses,
       status
     } = req.body;
@@ -825,6 +847,18 @@ app.put('/api/standards/:id', authenticateToken, requireRole('admin'), async (re
       } else {
         std.verifiedDate = null;
       }
+    }
+    if (publishedOn !== undefined) {
+      if (publishedOn) {
+        const parsed = new Date(publishedOn);
+        std.publishedOn = !isNaN(parsed.getTime()) ? parsed : null;
+      } else {
+        std.publishedOn = null;
+      }
+    }
+    if (latestReviewedYear !== undefined) {
+      const parsedYear = parseInt(latestReviewedYear, 10);
+      std.latestReviewedYear = (!isNaN(parsedYear) && parsedYear > 1900 && parsedYear < 2100) ? parsedYear : null;
     }
     if (clauses !== undefined && Array.isArray(clauses)) {
       std.clauses = clauses.map(c => ({
