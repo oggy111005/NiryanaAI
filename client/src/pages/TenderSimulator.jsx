@@ -111,6 +111,132 @@ export default function TenderSimulator() {
     setRecordedTimestamp(null);
   };
 
+  const handleExportPDF = () => {
+    if (!results) return;
+    const allStds = [];
+    results.results.forEach(clause => {
+      clause.recommendedStandards.forEach(std => {
+        if (!allStds.find(s => s.isNumber === std.isNumber)) {
+          allStds.push(std);
+        }
+      });
+    });
+
+    const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>BIS Compliance Report - ${results.documentName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
+          .header { border-bottom: 3px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 20px; }
+          .logo { font-size: 20px; font-weight: 900; color: #1e3a5f; }
+          .logo span { color: #0d9488; }
+          .report-title { font-size: 16px; font-weight: bold; margin-top: 8px; color: #1e3a5f; }
+          .meta { display: flex; gap: 24px; margin-top: 8px; }
+          .meta-item { font-size: 11px; color: #555; }
+          .meta-item strong { color: #1a1a1a; }
+          .section-title { font-size: 13px; font-weight: bold; color: #1e3a5f; border-left: 4px solid #1e3a5f; padding-left: 8px; margin: 20px 0 10px; }
+          .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+          .kpi { background: #f0f4ff; border: 1px solid #c7d5f0; border-radius: 6px; padding: 10px 14px; }
+          .kpi .num { font-size: 22px; font-weight: 900; color: #1e3a5f; }
+          .kpi .label { font-size: 10px; color: #555; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; font-size: 11px; }
+          th { background: #1e3a5f; color: white; padding: 8px 10px; text-align: left; }
+          td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+          tr:nth-child(even) td { background: #f9fafb; }
+          .badge-high { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .badge-med { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .badge-low { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .clause-text { color: #444; font-style: italic; font-size: 10px; margin-top: 3px; max-width: 280px; }
+          .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 10px; color: #888; display: flex; justify-content: space-between; }
+          .disclaimer { margin-top: 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; font-size: 10px; color: #78350f; }
+          @media print {
+            body { padding: 20px; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo"><span>Niryana</span>AI</div>
+          <div class="report-title">BIS Compliance Checklist Report</div>
+          <div class="meta">
+            <div class="meta-item"><strong>Document:</strong> ${results.documentName}</div>
+            <div class="meta-item"><strong>Generated:</strong> ${now}</div>
+            <div class="meta-item"><strong>Powered by:</strong> NiryanaAI / GeM Tender Simulator</div>
+          </div>
+        </div>
+
+        <div class="section-title">Executive Summary</div>
+        <div class="summary-grid">
+          <div class="kpi"><div class="num">${results.analyzedClauses}</div><div class="label">Clauses Analyzed</div></div>
+          <div class="kpi"><div class="num">${allStds.length}</div><div class="label">Unique IS Standards Mapped</div></div>
+          <div class="kpi"><div class="num">${results.results.filter(r => r.recommendedStandards.length > 0).length}</div><div class="label">Clauses with Standards Found</div></div>
+        </div>
+
+        <div class="section-title">BIS Compliance Checklist</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>IS Standard Number</th><th>Title</th><th>Confidence</th></tr>
+          </thead>
+          <tbody>
+            ${allStds.map((std, i) => {
+              const score = std.score;
+              let badgeClass = score >= 0.75 ? 'badge-high' : score >= 0.50 ? 'badge-med' : 'badge-low';
+              let badgeLabel = score >= 0.75 ? 'High' : score >= 0.50 ? 'Moderate' : 'Low';
+              return `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${std.isNumber}</strong></td>
+                <td>${std.title}</td>
+                <td><span class="${badgeClass}">${(score * 100).toFixed(0)}% ${badgeLabel}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">Clause-by-Clause Breakdown</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Clause Text</th><th>Mapped Standard(s)</th></tr>
+          </thead>
+          <tbody>
+            ${results.results.map((clause, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td><div class="clause-text">${clause.clauseText.substring(0, 180)}${clause.clauseText.length > 180 ? '...' : ''}</div></td>
+                <td>${clause.recommendedStandards.length > 0
+                  ? clause.recommendedStandards.slice(0,3).map(s => `<strong>${s.isNumber}</strong>`).join(', ')
+                  : '<em style="color:#999">No match found</em>'
+                }</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> This report is AI-generated by NiryanaAI for informational and procurement screening purposes only. 
+          Standards applicability must be verified against the official BIS publication before use in formal procurement proceedings.
+        </div>
+        <div class="footer">
+          <span>NiryanaAI — GeM Procurement Compliance Platform | SIH 2026</span>
+          <span>Report ID: NIRYANA-${Date.now().toString(36).toUpperCase()}</span>
+        </div>
+        <br/>
+        <button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:10px 24px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:8px;">
+          🖨 Print / Save as PDF
+        </button>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  };
+
   const handleParamChange = (index, field, value) => {
     setCustomParams(prev => {
       const next = [...prev];
@@ -400,9 +526,17 @@ export default function TenderSimulator() {
                 <span className="font-semibold">{allMatchedStandards.length}</span> unique BIS standard(s) mapped.
               </p>
             </div>
-            <button onClick={reset} className="flex items-center gap-1 text-sm text-green-700 hover:text-green-900 border border-green-300 px-3 py-1.5 rounded-md">
-              <X size={14} /> New Analysis
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportPDF}
+                className="flex items-center gap-1 text-sm text-white bg-primary hover:bg-blue-900 border border-blue-800 px-3 py-1.5 rounded-md transition-colors"
+              >
+                <Download size={14} /> Export PDF
+              </button>
+              <button onClick={reset} className="flex items-center gap-1 text-sm text-green-700 hover:text-green-900 border border-green-300 px-3 py-1.5 rounded-md">
+                <X size={14} /> New Analysis
+              </button>
+            </div>
           </div>
 
           {/* Compliance Checklist Summary */}
