@@ -121,6 +121,83 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
   }
 });
 
+// 6b. POST /api/screen-compliance (AI Compliance Screening - SIH Phase 5)
+// Evaluates vendor test evidence against applicable standard requirements
+app.post('/api/screen-compliance', authenticateToken, async (req, res) => {
+  try {
+    const { isNumber, materialName, parameters } = req.body;
+    if (!isNumber) {
+      return res.status(400).json({ error: 'isNumber is required for compliance screening' });
+    }
+
+    const evaluatedParams = (parameters && Array.isArray(parameters) ? parameters : []).map(p => {
+      const requiredVal = parseFloat(p.requiredValue);
+      const proposedVal = parseFloat(p.proposedValue);
+      const op = p.operator || '>=';
+
+      let isPassing = true;
+      let isBorderline = false;
+
+      if (!isNaN(requiredVal) && !isNaN(proposedVal)) {
+        if (op === '>=') {
+          isPassing = proposedVal >= requiredVal;
+          if (!isPassing && proposedVal >= requiredVal * 0.95) isBorderline = true;
+        } else if (op === '<=') {
+          isPassing = proposedVal <= requiredVal;
+          if (!isPassing && proposedVal <= requiredVal * 1.05) isBorderline = true;
+        } else if (op === '==') {
+          isPassing = proposedVal === requiredVal;
+        }
+      } else if (typeof p.requiredValue === 'string') {
+        const reqStr = String(p.requiredValue).toLowerCase().trim();
+        const propStr = String(p.proposedValue || '').toLowerCase().trim();
+        isPassing = propStr.includes(reqStr) || propStr === 'yes' || propStr === 'valid' || propStr === 'active';
+        if (!isPassing && (propStr === 'pending' || propStr === 'under renewal')) isBorderline = true;
+      }
+
+      return {
+        clauseNumber: p.clauseNumber || 'General',
+        parameterName: p.parameterName,
+        requiredValue: p.requiredValue,
+        proposedValue: p.proposedValue,
+        unit: p.unit || '',
+        status: isPassing ? 'PASS' : (isBorderline ? 'BORDERLINE' : 'FAIL')
+      };
+    });
+
+    const hasFailures = evaluatedParams.some(p => p.status === 'FAIL');
+    const hasBorderline = evaluatedParams.some(p => p.status === 'BORDERLINE');
+
+    let overallStatus = 'COMPLIANT';
+    let summary = 'Meets all required standards & criteria';
+    let badgeColor = 'green';
+
+    if (hasFailures) {
+      overallStatus = 'POTENTIAL NON-COMPLIANCE';
+      summary = 'Does not meet one or more required criteria';
+      badgeColor = 'red';
+    } else if (hasBorderline) {
+      overallStatus = 'VERIFY';
+      summary = 'Some parameters need clarification / more evidence';
+      badgeColor = 'yellow';
+    }
+
+    res.json({
+      isNumber,
+      materialName: materialName || 'Procured Material',
+      overallStatus,
+      summary,
+      badgeColor,
+      evaluatedParameters: evaluatedParams,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Compliance screening error:', err);
+    res.status(500).json({ error: 'Server error during compliance screening' });
+  }
+});
+
+
 // Helper for extracting text from PDF using pdf-parse v2 API
 async function extractTextFromPdf(buffer) {
   const { PDFParse } = require('pdf-parse');

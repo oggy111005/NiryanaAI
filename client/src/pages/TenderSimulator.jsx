@@ -3,7 +3,8 @@ import { useAuth } from '../AuthContext';
 import axios from 'axios';
 import {
   UploadCloud, FileText, AlertTriangle, CheckCircle,
-  Loader2, ClipboardList, ChevronDown, ChevronUp, X
+  Loader2, ClipboardList, ChevronDown, ChevronUp, X,
+  ShieldCheck, AlertCircle, CheckCircle2, XCircle, Play, Sparkles
 } from 'lucide-react';
 
 const CONFIDENCE_LABELS = [
@@ -11,6 +12,19 @@ const CONFIDENCE_LABELS = [
   { min: 0.50, label: 'Moderate Confidence', color: 'text-blue-700 bg-blue-100 border-blue-300' },
   { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300' },
 ];
+
+const SAMPLE_TENDER_TEXT = `PROCUREMENT TENDER #BR-2026-99102
+PROJECT: MAJOR HIGHWAY BRIDGE CONSTRUCTION (PIER & DECK SLAB)
+
+1. Scope of Work
+Supply and quality verification of heavy civil structural materials for bridge pier foundations and prestressed girder sections.
+
+2. Cementitious Materials Requirement
+The contractor must supply 43 Grade Ordinary Portland Cement (OPC) conforming to IS specifications. 
+The cement must achieve minimum 28-day compressive strength of 43.0 MPa. Total sulfur content calculated as sulfuric anhydride (SO3) shall not exceed 3.5% by mass.
+
+3. Structural Steel & Reinforcement
+All structural steel sections and high-strength deformed steel bars (Fe 500 Grade) must comply with mandatory BIS standards and bear valid ISI Certification Marks.`;
 
 function getConfidenceLabel(score) {
   for (const band of CONFIDENCE_LABELS) {
@@ -31,8 +45,20 @@ export default function TenderSimulator() {
   const [openClauses, setOpenClauses] = useState({});
   const fileRef = useRef();
 
+  // --- AI Compliance Screening State ---
+  const [screeningData, setScreeningData] = useState(null);
+  const [screeningLoading, setScreeningLoading] = useState(false);
+  const [screeningError, setScreeningError] = useState('');
+  const [activePreset, setActivePreset] = useState(null);
+
   const toggleClause = (idx) =>
     setOpenClauses(prev => ({ ...prev, [idx]: !prev[idx] }));
+
+  const loadSampleTender = () => {
+    setMode('paste');
+    setText(SAMPLE_TENDER_TEXT);
+    setError('');
+  };
 
   const reset = () => {
     setResults(null);
@@ -40,7 +66,56 @@ export default function TenderSimulator() {
     setText('');
     setFile(null);
     setOpenClauses({});
+    setScreeningData(null);
+    setScreeningError('');
+    setActivePreset(null);
   };
+
+  const runScreening = async (presetType) => {
+    setActivePreset(presetType);
+    setScreeningLoading(true);
+    setScreeningError('');
+
+    let parameters = [];
+    if (presetType === 'compliant') {
+      parameters = [
+        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
+        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', operator: 'includes' },
+        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
+      ];
+    } else if (presetType === 'non_compliant') {
+      parameters = [
+        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '31.2', unit: 'MPa', operator: '>=' },
+        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '4.4', unit: '%', operator: '<=' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Expired / Revoked', operator: 'includes' },
+        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '468.0', unit: 'N/mm²', operator: '>=' }
+      ];
+    } else if (presetType === 'verify') {
+      parameters = [
+        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '41.8', unit: 'MPa', operator: '>=' },
+        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '3.45', unit: '%', operator: '<=' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Pending Renewal Audit', operator: 'includes' },
+        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '495.0', unit: 'N/mm²', operator: '>=' }
+      ];
+    }
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/screen-compliance', {
+        isNumber: 'IS 269 / IS 1786 (Bridge Spec)',
+        materialName: 'Bridge Construction Materials (Cement & Steel)',
+        parameters
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setScreeningData(res.data);
+    } catch (err) {
+      setScreeningError(err.response?.data?.error || 'Compliance screening failed');
+    } finally {
+      setScreeningLoading(false);
+    }
+  };
+
 
   const handleSubmit = async () => {
     setError('');
@@ -94,19 +169,29 @@ export default function TenderSimulator() {
 
       {!results ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {/* Mode Toggle */}
-          <div className="flex rounded-md overflow-hidden border border-gray-200 mb-6 w-fit">
+          {/* Mode Toggle & Demo Preset */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex rounded-md overflow-hidden border border-gray-200 w-fit">
+              <button
+                onClick={() => setMode('paste')}
+                className={`px-5 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                📋 Paste Text
+              </button>
+              <button
+                onClick={() => setMode('upload')}
+                className={`px-5 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${mode === 'upload' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                📁 Upload File (PDF / TXT)
+              </button>
+            </div>
+
             <button
-              onClick={() => setMode('paste')}
-              className={`px-5 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              onClick={loadSampleTender}
+              className="flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3.5 py-2 rounded-md transition-colors shadow-sm"
+              title="Load standard procurement tender specifications"
             >
-              📋 Paste Text
-            </button>
-            <button
-              onClick={() => setMode('upload')}
-              className={`px-5 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${mode === 'upload' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              📁 Upload File (PDF / TXT)
+              <FileText size={14} /> 📄 Load Sample Tender
             </button>
           </div>
 
@@ -200,6 +285,169 @@ export default function TenderSimulator() {
               </ul>
             </div>
           )}
+
+          {/* AI COMPLIANCE SCREENING PANEL (Flowchart Steps 5 & 6) */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div>
+                <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                  <ShieldCheck className="text-secondary" size={22} /> AI Compliance Screening
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Screen vendor lab test reports against mandatory Indian Standard requirements.
+                </p>
+              </div>
+
+              {/* Simulation Preset Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => runScreening('compliant')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'compliant'
+                      ? 'bg-green-700 text-white shadow-sm'
+                      : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-300'
+                  }`}
+                >
+                  <CheckCircle2 size={14} /> 🟢 Simulate Compliant Bid
+                </button>
+                <button
+                  onClick={() => runScreening('verify')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'verify'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-300'
+                  }`}
+                >
+                  <AlertCircle size={14} /> 🟡 Simulate Borderline (Verify)
+                </button>
+                <button
+                  onClick={() => runScreening('non_compliant')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'non_compliant'
+                      ? 'bg-red-700 text-white shadow-sm'
+                      : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-300'
+                  }`}
+                >
+                  <XCircle size={14} /> 🔴 Simulate Defective Bid
+                </button>
+              </div>
+            </div>
+
+            {screeningLoading && (
+              <div className="flex items-center justify-center py-8 text-sm text-gray-500 gap-2">
+                <Loader2 size={20} className="animate-spin text-primary" />
+                Cross-checking vendor lab evidence against BIS clause limits...
+              </div>
+            )}
+
+            {screeningError && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">
+                {screeningError}
+              </div>
+            )}
+
+            {!screeningData && !screeningLoading && (
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-sm text-gray-500">
+                <p className="font-medium text-gray-700 mb-1">No test evidence screened yet.</p>
+                <p className="text-xs text-gray-400">
+                  Click one of the buttons above (e.g. <span className="font-semibold text-green-700">🟢 Simulate Compliant Bid</span> or <span className="font-semibold text-red-700">🔴 Simulate Defective Bid</span>) to evaluate vendor lab test reports against applicable standards.
+                </p>
+              </div>
+            )}
+
+            {screeningData && !screeningLoading && (
+              <div className="space-y-4 mt-2">
+                {/* Tri-Color Verdict Banner */}
+                <div
+                  className={`p-4 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    screeningData.overallStatus === 'COMPLIANT'
+                      ? 'bg-green-50 border-green-300 text-green-900'
+                      : screeningData.overallStatus === 'VERIFY'
+                      ? 'bg-amber-50 border-amber-300 text-amber-900'
+                      : 'bg-red-50 border-red-300 text-red-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    {screeningData.overallStatus === 'COMPLIANT' ? (
+                      <div className="w-12 h-12 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={28} className="text-green-600" />
+                      </div>
+                    ) : screeningData.overallStatus === 'VERIFY' ? (
+                      <div className="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shrink-0">
+                        <AlertCircle size={28} className="text-amber-600" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-red-100 border-2 border-red-500 flex items-center justify-center shrink-0">
+                        <XCircle size={28} className="text-red-600" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-lg tracking-wide uppercase">
+                          {screeningData.overallStatus}
+                        </span>
+                        <span className="text-xs bg-white/80 px-2 py-0.5 rounded border border-gray-300 font-medium text-gray-700">
+                          {screeningData.isNumber}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-1 font-medium">{screeningData.summary}</p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-mono text-gray-500 bg-white/60 px-2 py-1 rounded border border-gray-200">
+                      Evaluated: {new Date(screeningData.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Evidence Parameter Table */}
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200 text-xs">
+                    <thead className="bg-gray-50 text-gray-600 font-semibold uppercase tracking-wider">
+                      <tr>
+                        <th className="px-3 py-2 text-left">IS Clause</th>
+                        <th className="px-3 py-2 text-left">Technical Parameter</th>
+                        <th className="px-3 py-2 text-left">Mandatory Standard Criteria</th>
+                        <th className="px-3 py-2 text-left">Submitted Vendor Test Evidence</th>
+                        <th className="px-3 py-2 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 bg-white">
+                      {screeningData.evaluatedParameters.map((p, pIdx) => (
+                        <tr key={pIdx} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-mono text-gray-500">Cl. {p.clauseNumber}</td>
+                          <td className="px-3 py-2 font-medium text-gray-900">{p.parameterName}</td>
+                          <td className="px-3 py-2 text-gray-600 font-mono">
+                            {p.requiredValue} {p.unit}
+                          </td>
+                          <td className="px-3 py-2 font-mono font-semibold text-gray-800">
+                            {p.proposedValue} {p.unit}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[11px] border ${
+                                p.status === 'PASS'
+                                  ? 'bg-green-100 text-green-800 border-green-300'
+                                  : p.status === 'BORDERLINE'
+                                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                  : 'bg-red-100 text-red-800 border-red-300'
+                              }`}
+                            >
+                              {p.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
 
           {/* Per-Clause Breakdown */}
           <h2 className="font-bold text-gray-800 mb-3 text-lg">Clause-by-Clause Breakdown</h2>
