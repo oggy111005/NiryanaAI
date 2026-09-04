@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 import DatabaseView from './pages/DatabaseView';
 import Login from './pages/Login';
 import TenderSimulator from './pages/TenderSimulator';
+import NotFound from './pages/NotFound';
 import Chatbot from './components/Chatbot';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
@@ -106,6 +107,9 @@ function AppRoutes() {
           <Route path="/history" element={<ProtectedRoute requiredRole="user"><History /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
           <Route path="/database" element={<ProtectedRoute requiredRole="admin"><DatabaseView /></ProtectedRoute>} />
+
+          {/* 404 Catch-All Route */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { MessageSquare, X, Send, Bot, User, Loader2 } from 'lucide-react';
 
 export default function Chatbot() {
@@ -31,7 +31,7 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/chat', { message: userMessage });
+      const res = await api.post('/api/chat', { message: userMessage });
       setMessages(prev => [...prev, { sender: 'bot', text: res.data.reply }]);
     } catch (err) {
       setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, I am having trouble connecting to my brain right now!' }]);

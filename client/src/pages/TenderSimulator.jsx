@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../AuthContext';
-import axios from 'axios';
+import api from '../api';
 import {
   UploadCloud, FileText, AlertTriangle, CheckCircle,
   Loader2, ClipboardList, ChevronDown, ChevronUp, X,
-  ShieldCheck, AlertCircle, CheckCircle2, XCircle, Play, Sparkles,
-  Download, Printer, UserCheck, Stamp, Lock
+  ShieldCheck, AlertCircle, CheckCircle2, XCircle,
+  Download, Printer, UserCheck, Stamp, Lock,
+  Edit3, Building2, PlusCircle, Trash2, Send
 } from 'lucide-react';
 
 const CONFIDENCE_LABELS = [
@@ -52,6 +53,17 @@ export default function TenderSimulator() {
   const [screeningError, setScreeningError] = useState('');
   const [activePreset, setActivePreset] = useState(null);
 
+  // --- Custom Bid & Lab Test Entry State ---
+  const [showCustomBidForm, setShowCustomBidForm] = useState(false);
+  const [customBidderName, setCustomBidderName] = useState('UltraTech Cement & Infrastructure Ltd');
+  const [customLabReportNo, setCustomLabReportNo] = useState('NABL/TC-2026/8941');
+  const [customParams, setCustomParams] = useState([
+    { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
+    { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
+    { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
+    { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
+  ]);
+
   // --- Engineer Review & Decision State ---
   const [engineerDecision, setEngineerDecision] = useState('approve');
   const [engineerNotes, setEngineerNotes] = useState('');
@@ -83,6 +95,15 @@ export default function TenderSimulator() {
     setScreeningData(null);
     setScreeningError('');
     setActivePreset(null);
+    setShowCustomBidForm(false);
+    setCustomBidderName('UltraTech Cement & Infrastructure Ltd');
+    setCustomLabReportNo('NABL/TC-2026/8941');
+    setCustomParams([
+      { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
+      { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
+      { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
+      { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
+    ]);
     setEngineerDecision('approve');
     setEngineerNotes('');
     setIsDecisionRecorded(false);
@@ -90,6 +111,48 @@ export default function TenderSimulator() {
     setRecordedTimestamp(null);
   };
 
+  const handleParamChange = (index, field, value) => {
+    setCustomParams(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddParam = () => {
+    setCustomParams(prev => [
+      ...prev,
+      { parameterName: 'Additional Specification Criterion', clauseNumber: '4.X', requiredValue: '10.0', proposedValue: '12.0', unit: '', operator: '>=' }
+    ]);
+  };
+
+  const handleRemoveParam = (index) => {
+    setCustomParams(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleScreenCustomBid = async (e) => {
+    if (e) e.preventDefault();
+    setActivePreset('custom');
+    setScreeningLoading(true);
+    setScreeningError('');
+
+    try {
+      const res = await api.post('/api/screen-compliance', {
+        isNumber: 'IS 269 / IS 1786 (Bridge Spec)',
+        materialName: `Bridge Construction Materials (Bidder: ${customBidderName || 'Vendor'})`,
+        parameters: customParams
+      });
+      setScreeningData({
+        ...res.data,
+        bidderName: customBidderName,
+        labReportNo: customLabReportNo
+      });
+    } catch (err) {
+      setScreeningError(err.response?.data?.error || 'Compliance screening failed');
+    } finally {
+      setScreeningLoading(false);
+    }
+  };
 
   const handleExportJSON = () => {
     const exportPayload = {
@@ -102,7 +165,11 @@ export default function TenderSimulator() {
         title: s.title,
         confidenceScore: s.score
       })),
-      complianceScreening: screeningData || {
+      complianceScreening: screeningData ? {
+        ...screeningData,
+        bidderName: screeningData.bidderName || customBidderName,
+        labReportNo: screeningData.labReportNo || customLabReportNo
+      } : {
         status: 'PENDING_SCREENING',
         note: 'Vendor test evidence screening not performed'
       },
@@ -130,45 +197,60 @@ export default function TenderSimulator() {
     window.print();
   };
 
-
   const runScreening = async (presetType) => {
     setActivePreset(presetType);
     setScreeningLoading(true);
     setScreeningError('');
 
     let parameters = [];
+    let bidderName = 'Bridge Civil Supplier Ltd';
+    let labReportNo = 'NABL-2026-CERT-01';
+
     if (presetType === 'compliant') {
+      bidderName = 'Ambuja Cements & Tata Steel Consortium';
+      labReportNo = 'NABL/2026/PASS-9102';
       parameters = [
         { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
         { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', operator: 'includes' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
         { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
       ];
     } else if (presetType === 'non_compliant') {
+      bidderName = 'Substandard Materials Trading Co.';
+      labReportNo = 'QC-FAIL-2026-044';
       parameters = [
         { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '31.2', unit: 'MPa', operator: '>=' },
         { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '4.4', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Expired / Revoked', operator: 'includes' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Expired / Revoked', unit: '', operator: 'includes' },
         { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '468.0', unit: 'N/mm²', operator: '>=' }
       ];
     } else if (presetType === 'verify') {
+      bidderName = 'National Infrastructure Supplies Pvt Ltd';
+      labReportNo = 'REV-AUDIT-2026-11';
       parameters = [
         { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '41.8', unit: 'MPa', operator: '>=' },
         { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '3.45', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Pending Renewal Audit', operator: 'includes' },
+        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Pending Renewal Audit', unit: '', operator: 'includes' },
         { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '495.0', unit: 'N/mm²', operator: '>=' }
       ];
     }
 
+    setCustomBidderName(bidderName);
+    setCustomLabReportNo(labReportNo);
+    setCustomParams(parameters);
+    setShowCustomBidForm(true);
+
     try {
-      const res = await axios.post('http://localhost:5000/api/screen-compliance', {
+      const res = await api.post('/api/screen-compliance', {
         isNumber: 'IS 269 / IS 1786 (Bridge Spec)',
-        materialName: 'Bridge Construction Materials (Cement & Steel)',
+        materialName: `Bridge Construction Materials (${bidderName})`,
         parameters
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-      setScreeningData(res.data);
+      setScreeningData({
+        ...res.data,
+        bidderName,
+        labReportNo
+      });
     } catch (err) {
       setScreeningError(err.response?.data?.error || 'Compliance screening failed');
     } finally {
@@ -194,9 +276,7 @@ export default function TenderSimulator() {
         form.append('file', file, file.name);
       }
 
-      const res = await axios.post('http://localhost:5000/api/analyze-tender', form, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post('/api/analyze-tender', form);
       setResults(res.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Analysis failed. Please try again.');
@@ -358,8 +438,19 @@ export default function TenderSimulator() {
                 </p>
               </div>
 
-              {/* Simulation Preset Buttons */}
+              {/* Simulation Preset Buttons & Custom Bid Toggle */}
               <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomBidForm(prev => !prev)}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
+                    showCustomBidForm
+                      ? 'bg-blue-900 text-white border-blue-900 shadow-sm'
+                      : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border-blue-300'
+                  }`}
+                >
+                  <Edit3 size={14} /> ✍️ Enter Custom Bid
+                </button>
                 <button
                   onClick={() => runScreening('compliant')}
                   disabled={screeningLoading}
@@ -396,6 +487,145 @@ export default function TenderSimulator() {
               </div>
             </div>
 
+            {/* Custom Bid Submission Drawer / Form */}
+            {showCustomBidForm && (
+              <div className="bg-slate-50 border border-blue-200 rounded-lg p-5 mb-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="text-primary" size={20} />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-800 text-sm">Vendor Bid &amp; Lab Test Report Submission</h3>
+                        {activePreset && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            activePreset === 'compliant' ? 'bg-green-100 text-green-800 border border-green-200' :
+                            activePreset === 'verify' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                            activePreset === 'non_compliant' ? 'bg-red-100 text-red-800 border border-red-200' :
+                            'bg-blue-100 text-blue-800 border border-blue-200'
+                          }`}>
+                            Preset: {activePreset.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500">Enter contractor credentials and submitted NABL lab test values to evaluate against BIS clause specifications.</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomBidForm(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    ✕ Close Form
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Bidder / Vendor Name
+                    </label>
+                    <input
+                      type="text"
+                      value={customBidderName}
+                      onChange={e => setCustomBidderName(e.target.value)}
+                      placeholder="e.g. UltraTech Cement Ltd"
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-primary focus:border-primary bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      NABL Lab Test Report / Certificate #
+                    </label>
+                    <input
+                      type="text"
+                      value={customLabReportNo}
+                      onChange={e => setCustomLabReportNo(e.target.value)}
+                      placeholder="e.g. NABL/TC-2026/8941"
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-mono focus:ring-primary focus:border-primary bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Interactive Parameters Table */}
+                <div className="border border-gray-200 rounded-md overflow-hidden bg-white mb-3">
+                  <table className="min-w-full divide-y divide-gray-200 text-xs">
+                    <thead className="bg-gray-100 text-gray-600 font-semibold uppercase">
+                      <tr>
+                        <th className="px-3 py-2 text-left w-20">Clause</th>
+                        <th className="px-3 py-2 text-left">Parameter Name</th>
+                        <th className="px-3 py-2 text-left w-36">Required Criteria</th>
+                        <th className="px-3 py-2 text-left w-48">Submitted Vendor Value</th>
+                        <th className="px-3 py-2 text-center w-12">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {customParams.map((p, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={p.clauseNumber}
+                              onChange={e => handleParamChange(idx, 'clauseNumber', e.target.value)}
+                              className="w-full border border-gray-200 rounded px-1.5 py-1 text-[11px] font-mono"
+                            />
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={p.parameterName}
+                              onChange={e => handleParamChange(idx, 'parameterName', e.target.value)}
+                              className="w-full border border-gray-200 rounded px-2 py-1 text-xs font-medium"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-gray-600 font-mono text-xs">
+                            {p.operator} {p.requiredValue} {p.unit}
+                          </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={p.proposedValue}
+                              onChange={e => handleParamChange(idx, 'proposedValue', e.target.value)}
+                              placeholder="e.g. 48.5"
+                              className="w-full border border-blue-300 rounded px-2 py-1 text-xs font-bold font-mono focus:ring-1 focus:ring-primary bg-blue-50/40"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveParam(idx)}
+                              className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                              title="Remove Parameter"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleAddParam}
+                    className="text-xs font-semibold text-primary hover:text-blue-900 flex items-center gap-1"
+                  >
+                    <PlusCircle size={14} /> + Add Another Parameter
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleScreenCustomBid}
+                    disabled={screeningLoading}
+                    className="px-5 py-2 bg-primary hover:bg-blue-900 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+                  >
+                    <Send size={13} /> 🔍 Screen &amp; Evaluate Bid Against BIS
+                  </button>
+                </div>
+              </div>
+            )}
+
             {screeningLoading && (
               <div className="flex items-center justify-center py-8 text-sm text-gray-500 gap-2">
                 <Loader2 size={20} className="animate-spin text-primary" />
@@ -413,7 +643,7 @@ export default function TenderSimulator() {
               <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-sm text-gray-500">
                 <p className="font-medium text-gray-700 mb-1">No test evidence screened yet.</p>
                 <p className="text-xs text-gray-400">
-                  Click one of the buttons above (e.g. <span className="font-semibold text-green-700">🟢 Simulate Compliant Bid</span> or <span className="font-semibold text-red-700">🔴 Simulate Defective Bid</span>) to evaluate vendor lab test reports against applicable standards.
+                  Click <span className="font-semibold text-blue-800">✍️ Enter Custom Bid</span> to submit contractor lab numbers, or use one of the quick simulation buttons above (e.g. <span className="font-semibold text-green-700">🟢 Compliant</span> or <span className="font-semibold text-red-700">🔴 Defective</span>).
                 </p>
               </div>
             )}
@@ -454,6 +684,14 @@ export default function TenderSimulator() {
                         </span>
                       </div>
                       <p className="text-xs mt-1 font-medium">{screeningData.summary}</p>
+                      {screeningData.bidderName && (
+                        <div className="text-[11px] font-medium text-gray-700 mt-1 flex items-center gap-2">
+                          <span>Bidder: <strong className="text-gray-900">{screeningData.bidderName}</strong></span>
+                          {screeningData.labReportNo && (
+                            <span>• Lab Report: <span className="font-mono text-gray-800">#{screeningData.labReportNo}</span></span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right shrink-0">

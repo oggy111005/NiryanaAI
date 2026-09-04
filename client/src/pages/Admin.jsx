@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { Plus, Save, Upload, Loader2 } from 'lucide-react';
 
 export default function Admin() {
@@ -32,7 +32,7 @@ export default function Admin() {
     uploadData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/extract-standard', uploadData, {
+      const response = await api.post('/api/extract-standard', uploadData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -67,7 +67,7 @@ export default function Admin() {
     setLoading(true);
     setMessage('');
     try {
-      await axios.post('http://localhost:5000/api/standards', formData);
+      await api.post('/api/standards', formData);
       setMessage('Standard added successfully! Embeddings generated.');
       setFormData({
         isNumber: '',
@@ -232,7 +232,7 @@ function RegisterUserContent() {
     setLoading(true);
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const res = await api.post('/api/auth/register', formData);
       setMessage(`Success! Created new ${res.data.role}: ${res.data.username}`);
       setFormData({ username: '', password: '', role: 'user' });
     } catch (err) {
@@ -296,7 +296,7 @@ function ManageUsersContent() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/auth/users');
+      const res = await api.get('/api/auth/users');
       setUsers(res.data);
     } catch (err) {
       setMessage('Failed to fetch users.');
@@ -308,7 +308,7 @@ function ManageUsersContent() {
   const handleDelete = async (id, username) => {
     if (!window.confirm(`Are you sure you want to delete user ${username}?`)) return;
     try {
-      await axios.delete(`http://localhost:5000/api/auth/users/${id}`);
+      await api.delete(`/api/auth/users/${id}`);
       setMessage(`User ${username} deleted.`);
       fetchUsers();
     } catch (err) {
@@ -319,7 +319,7 @@ function ManageUsersContent() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/auth/users/${editingUser._id}`, editFormData);
+      await api.put(`/api/auth/users/${editingUser._id}`, editFormData);
       setMessage(`User ${editingUser.username} updated.`);
       setEditingUser(null);
       fetchUsers();

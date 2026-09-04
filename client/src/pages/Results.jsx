@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
+import api from '../api';
+import { ArrowLeft, CheckCircle, Shield, FileText, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
 
 export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   const { results, query } = location.state || {};
+
+  // --- Explainability state (must be declared at top level) ---
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [citations, setCitations] = useState([]);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState('');
 
   if (!results) {
     return (
@@ -19,20 +26,13 @@ export default function Results() {
 
   const { primary, related } = results;
 
-  // --- Explainability state ---
-  const [explainOpen, setExplainOpen] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [citations, setCitations] = useState([]);
-  const [explainLoading, setExplainLoading] = useState(false);
-  const [explainError, setExplainError] = useState('');
-
   const fetchExplanation = async () => {
     if (explanation) { setExplainOpen(o => !o); return; } // already fetched
     setExplainOpen(true);
     setExplainLoading(true);
     setExplainError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/explain', {
+      const res = await api.post('/api/explain', {
         standardId: primary._id,
         userQuery: query
       });
@@ -42,15 +42,6 @@ export default function Results() {
       setExplainError('Could not load explanation. Please try again.');
     } finally {
       setExplainLoading(false);
-    }
-  };
-
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'Safety': return <Shield size={16} className="text-red-500" />;
-      case 'Test Method': return <Settings size={16} className="text-blue-500" />;
-      case 'Related Product': return <Layers size={16} className="text-green-500" />;
-      default: return <FileText size={16} className="text-gray-500" />;
     }
   };
 

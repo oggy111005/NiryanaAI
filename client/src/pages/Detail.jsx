@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText } from 'lucide-react';
 
 export default function Detail() {
@@ -8,11 +8,19 @@ export default function Detail() {
   const [standard, setStandard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('bookmarked_standards') || '[]');
+      return saved.some(item => item.id === id);
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     const fetchStandard = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/standards/${id}`);
+        const res = await api.get(`/api/standards/${id}`);
         setStandard(res.data);
       } catch (err) {
         setError('Failed to load standard details.');
@@ -23,7 +31,52 @@ export default function Detail() {
     fetchStandard();
   }, [id]);
 
-  if (loading) return <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-primary" size={32} /></div>;
+  const toggleBookmark = () => {
+    if (!standard) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('bookmarked_standards') || '[]');
+      let updated;
+      if (isBookmarked) {
+        updated = saved.filter(item => item.id !== id);
+        setIsBookmarked(false);
+      } else {
+        updated = [...saved, {
+          id,
+          isNumber: standard.isNumber,
+          title: standard.title,
+          category: standard.category,
+          savedAt: new Date().toISOString()
+        }];
+        setIsBookmarked(true);
+      }
+      localStorage.setItem('bookmarked_standards', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Bookmark error', e);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-16 mb-6"></div>
+        <div className="border-b pb-6 mb-6">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-3"></div>
+          <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+            <div className="h-24 bg-gray-100 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+            <div className="h-32 bg-gray-100 rounded"></div>
+          </div>
+          <div className="space-y-4">
+            <div className="h-48 bg-gray-100 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="text-center text-red-500 mt-20">{error}</div>;
   if (!standard) return <div className="text-center mt-20">Standard not found.</div>;
 
@@ -55,8 +108,18 @@ export default function Detail() {
           </div>
           <h2 className="text-2xl text-gray-800 font-medium">{standard.title}</h2>
         </div>
-        <button className="p-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-600 transition-colors">
-          <Bookmark size={20} />
+        <button
+          type="button"
+          onClick={toggleBookmark}
+          title={isBookmarked ? "Remove from Saved Standards" : "Save Standard"}
+          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold ${
+            isBookmarked
+              ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-sm'
+              : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+          }`}
+        >
+          <Bookmark size={18} className={isBookmarked ? "fill-amber-500 text-amber-500" : "text-gray-500"} />
+          <span>{isBookmarked ? "Saved" : "Save"}</span>
         </button>
       </div>
 

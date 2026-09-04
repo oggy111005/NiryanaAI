@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { Search, Loader2 } from 'lucide-react';
 
 export default function Home() {
@@ -24,7 +24,7 @@ export default function Home() {
     setError('');
     try {
       // Make API call to our backend recommendation endpoint
-      const response = await axios.post('http://localhost:5000/api/recommend', { query: q });
+      const response = await api.post('/api/recommend', { query: q });
       
       // Navigate to results page with the data
       navigate('/results', { state: { results: response.data, query: q } });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Clock } from 'lucide-react';
+import api from '../api';
+import { Clock, Loader2, Search } from 'lucide-react';
 
 export default function History() {
   const [history, setHistory] = useState([]);
@@ -9,7 +9,7 @@ export default function History() {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/history');
+        const res = await api.get('/api/history');
         setHistory(res.data);
       } catch (err) {
         console.error(err);
@@ -27,10 +27,15 @@ export default function History() {
       </h2>
       
       {loading ? (
-        <div className="text-center py-10 text-gray-500">Loading history...</div>
+        <div className="flex items-center justify-center py-12 text-gray-500 gap-2">
+          <Loader2 className="animate-spin text-primary" size={20} />
+          <span className="text-sm">Retrieving your procurement search history...</span>
+        </div>
       ) : history.length === 0 ? (
-        <div className="text-center py-10 bg-white rounded-lg border border-gray-200 text-gray-500">
-          No search history available.
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-200 text-gray-500">
+          <Search size={32} className="mx-auto mb-2 text-gray-300" />
+          <p className="text-sm font-medium">No procurement searches logged yet.</p>
+          <p className="text-xs text-gray-400 mt-1">Queries entered in the search bar will be saved here for auditability.</p>
         </div>
       ) : (
         <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">

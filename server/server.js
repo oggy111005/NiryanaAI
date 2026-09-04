@@ -88,7 +88,7 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
       clauses.push(text.substring(0, 500));
     }
 
-    const allStandardsWithEmb = await Standard.find().select('+embedding').lean();
+    const allStandardsWithEmb = await Standard.find({ isDemo: { $ne: true } }).select('+embedding').lean();
     const analysisResults = [];
 
     for (const clause of clauses) {
@@ -476,9 +476,10 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       // matchType: 'exact' — no synthetic similarity score attached
       matchedStd.matchType = 'exact';
 
-      // Fetch related standards in the same category (excluding self)
+      // Fetch related standards in the same category (excluding self and demo records)
       const related = await Standard.find({
         category: matchedStd.category,
+        isDemo: { $ne: true },
         _id: { $ne: matchedStd._id }
       }).limit(4).select('-embedding').lean();
 
@@ -566,7 +567,7 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
     const queryEmbedding = Array.from(output.data);
 
 
-    const allStandards = await Standard.find();
+    const allStandards = await Standard.find({ isDemo: { $ne: true } });
     const ranked = allStandards.map(std => {
       const score = cosineSimilarity(queryEmbedding, std.embedding);
       return { ...std.toObject(), similarityScore: score };

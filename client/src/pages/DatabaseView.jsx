@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { Loader2, Database as DatabaseIcon, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function DatabaseView() {
@@ -11,7 +11,7 @@ export default function DatabaseView() {
   useEffect(() => {
     const fetchStandards = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/standards');
+        const res = await api.get('/api/standards');
         setStandards(res.data);
       } catch (err) {
         setError('Failed to fetch standards.');
