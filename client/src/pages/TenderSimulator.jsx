@@ -35,7 +35,10 @@ const CONFIDENCE_LABELS = [
   { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300' },
 ];
 
-const SAMPLE_TENDER_TEXT = `PROCUREMENT TENDER #BR-2026-99102
+const TENDER_SCENARIOS = {
+  bridge: {
+    label: "🌉 Highway Bridge",
+    text: `PROCUREMENT TENDER #BR-2026-99102
 PROJECT: MAJOR HIGHWAY BRIDGE CONSTRUCTION (PIER & DECK SLAB)
 
 1. Scope of Work
@@ -46,7 +49,37 @@ The contractor must supply 43 Grade Ordinary Portland Cement (OPC) conforming to
 The cement must achieve minimum 28-day compressive strength of 43.0 MPa. Total sulfur content calculated as sulfuric anhydride (SO3) shall not exceed 3.5% by mass.
 
 3. Structural Steel & Reinforcement
-All structural steel sections and high-strength deformed steel bars (Fe 500 Grade) must comply with mandatory BIS standards and bear valid ISI Certification Marks.`;
+All structural steel sections and high-strength deformed steel bars (Fe 500 Grade) must comply with mandatory BIS standards and bear valid ISI Certification Marks.`
+  },
+  hospital: {
+    label: "⚡ Hospital Electrical",
+    text: `PROCUREMENT TENDER #MED-EL-2026-004
+PROJECT: AIIMS ICU WARD ELECTRICAL WIRING & SAFETY GEAR
+
+1. Scope of Work
+Procurement of heavy-duty electrical cables and personnel safety equipment for the new Intensive Care Unit block.
+
+2. Wiring & Cables
+All underground and concealed wiring must utilize PVC insulated (heavy duty) electric cables suitable for working voltages up to and including 1100 V. The cables must bear the standard ISI mark for safety compliance.
+
+3. Personnel Safety Gear
+To ensure the safety of our maintenance electricians working on live ICU panels, the vendor must supply solid rubber gloves for electrical purposes. These gloves must withstand high voltage without degradation and meet all Indian safety standards.`
+  },
+  water: {
+    label: "🚰 Water Pipeline",
+    text: `PROCUREMENT TENDER #WATER-2026-887
+PROJECT: MUNICIPAL DRINKING WATER DISTRIBUTION UPGRADE
+
+1. Scope of Work
+Installation of primary water distribution pipelines and verification of drinking water quality for the new municipal zone.
+
+2. Piping Materials
+The contractor shall lay precast concrete pipes (with and without reinforcement) for the main drainage and distribution network. These pipes must meet strict structural integrity standards for underground utilities.
+
+3. Water Quality Assurance
+Before final commissioning, the water running through the pipes must be tested for human consumption. It must meet the official drinking water specifications, with strict limits on turbidity, dissolved solids, and bacterial contamination.`
+  }
+};
 
 function getConfidenceLabel(score) {
   for (const band of CONFIDENCE_LABELS) {
@@ -90,9 +123,9 @@ export default function TenderSimulator() {
   const toggleClause = (idx) =>
     setOpenClauses(prev => ({ ...prev, [idx]: !prev[idx] }));
 
-  const loadSampleTender = () => {
+  const loadSampleTender = (scenarioKey = 'bridge') => {
     setMode('paste');
-    setText(SAMPLE_TENDER_TEXT);
+    setText(TENDER_SCENARIOS[scenarioKey].text);
     setError('');
   };
 
@@ -507,13 +540,19 @@ export default function TenderSimulator() {
               </button>
             </div>
 
-            <button
-              onClick={loadSampleTender}
-              className="flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3.5 py-2 rounded-md transition-colors shadow-sm"
-              title="Load standard procurement tender specifications"
-            >
-              <FileText size={14} /> 📄 Load Sample Tender
-            </button>
+            <div className="flex gap-2 items-center overflow-x-auto pb-1 max-w-full">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">Demo:</span>
+              {Object.entries(TENDER_SCENARIOS).map(([key, scenario]) => (
+                <button
+                  key={key}
+                  onClick={() => loadSampleTender(key)}
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-md transition-colors shadow-sm"
+                  title={`Load ${scenario.label} tender`}
+                >
+                  {scenario.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Input Area */}

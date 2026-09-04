@@ -22,17 +22,41 @@ const CopyButton = ({ text }) => {
   );
 };
 
-const SAMPLE_BID_A = `VENDOR PROPOSAL A
+const BID_SCENARIOS = {
+  bridge: {
+    label: "🌉 Highway Bridge",
+    a: `VENDOR PROPOSAL A (Compliant)
 We will supply heavy civil structural materials for the bridge project.
 1. We will use 43 Grade Ordinary Portland Cement meeting IS 269 specifications with 43.0 MPa minimum strength.
 2. All hot rolled structural steel sections will comply with IS 2062 and bear ISI marks.
-3. Precast concrete pipes will be used as per IS 458 for drainage.`;
-
-const SAMPLE_BID_B = `VENDOR PROPOSAL B
+3. Precast concrete pipes will be used as per IS 458 for drainage.`,
+    b: `VENDOR PROPOSAL B (Non-Compliant)
 We are pleased to submit our proposal for the bridge materials.
 1. We will supply standard commercial cement with good compressive strength.
 2. We use high quality steel sections sourced from international vendors, tested in our own labs to exceed local requirements.
-3. Drainage will use standard concrete pipes.`;
+3. Drainage will use standard concrete pipes.`
+  },
+  hospital: {
+    label: "⚡ Hospital Electrical",
+    a: `VENDOR PROPOSAL A (Compliant)
+For the ICU electrical wiring:
+1. We will install heavy-duty PVC insulated cables bearing the ISI mark as per IS 1554.
+2. We provide our staff with IS 4770 certified rubber safety gloves for high voltage work.`,
+    b: `VENDOR PROPOSAL B (Non-Compliant)
+For the ICU electrical wiring:
+1. We will install imported premium electrical cables with high voltage tolerance.
+2. Our staff use thick rubber gloves to prevent shocks during installation.`
+  },
+  water: {
+    label: "🚰 Water Pipeline",
+    a: `VENDOR PROPOSAL A (Compliant)
+1. Distribution pipes will be IS 458 standard reinforced concrete.
+2. Water quality will be strictly tested to meet all parameters defined in IS 10500 for drinking water.`,
+    b: `VENDOR PROPOSAL B (Non-Compliant)
+1. Distribution pipes will be durable concrete variants.
+2. Water quality will be tested to ensure it is clean and safe for human consumption.`
+  }
+};
 
 export default function BidComparator() {
   const [bidA, setBidA] = useState('');
@@ -41,9 +65,9 @@ export default function BidComparator() {
   const [error, setError] = useState('');
   const [results, setResults] = useState(null);
 
-  const loadSamples = () => {
-    setBidA(SAMPLE_BID_A);
-    setBidB(SAMPLE_BID_B);
+  const loadSamples = (scenarioKey = 'bridge') => {
+    setBidA(BID_SCENARIOS[scenarioKey].a);
+    setBidB(BID_SCENARIOS[scenarioKey].b);
     setResults(null);
   };
 
@@ -167,10 +191,17 @@ export default function BidComparator() {
 
       {!results ? (
         <div className="space-y-6">
-          <div className="flex justify-end">
-            <button onClick={loadSamples} className="text-sm text-primary hover:underline font-medium">
-              Load Sample Bids
-            </button>
+          <div className="flex justify-end gap-2 items-center overflow-x-auto pb-1 max-w-full">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">Demos:</span>
+            {Object.entries(BID_SCENARIOS).map(([key, scenario]) => (
+              <button
+                key={key}
+                onClick={() => loadSamples(key)}
+                className="shrink-0 text-xs text-primary hover:text-white bg-blue-50 hover:bg-primary border border-blue-200 px-3 py-1.5 rounded-md font-medium transition-colors shadow-sm"
+              >
+                {scenario.label}
+              </button>
+            ))}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
