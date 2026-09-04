@@ -41,6 +41,14 @@ const standardSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  publishedOn: {
+    type: Date,
+    default: null
+  },
+  latestReviewedYear: {
+    type: Number,
+    default: null
+  },
   clauses: [
     {
       clauseNumber: { type: String, required: true },
@@ -64,6 +72,8 @@ standardSchema.pre('validate', function() {
     }
     this.sourceUrl = null;
     this.verifiedDate = null;
+    this.publishedOn = null;
+    this.latestReviewedYear = null;
     if (this.clauses && Array.isArray(this.clauses)) {
       this.clauses.forEach(c => { c.sourceUrl = null; });
     }
@@ -96,6 +106,8 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
         update.$setOnInsert.status = 'draft';
         update.$setOnInsert.sourceUrl = null;
         update.$setOnInsert.verifiedDate = null;
+        update.$setOnInsert.publishedOn = null;
+        update.$setOnInsert.latestReviewedYear = null;
         if (update.$setOnInsert.clauses && Array.isArray(update.$setOnInsert.clauses)) {
           update.$setOnInsert.clauses.forEach(c => { c.sourceUrl = null; });
         }
@@ -115,6 +127,8 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
         }
         update.$set.sourceUrl = null;
         update.$set.verifiedDate = null;
+        update.$set.publishedOn = null;
+        update.$set.latestReviewedYear = null;
         // Sanitize clause sourceUrls for DEMO records on $set updates
         if (update.$set.clauses && Array.isArray(update.$set.clauses)) {
           update.$set.clauses.forEach(c => { c.sourceUrl = null; });

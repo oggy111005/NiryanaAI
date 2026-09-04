@@ -1,23 +1,114 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../AuthContext';
-import axios from 'axios';
+import api from '../api';
 import {
   UploadCloud, FileText, AlertTriangle, CheckCircle,
-  Loader2, ClipboardList, ChevronDown, ChevronUp, X
+  Loader2, ClipboardList, ChevronDown, ChevronUp, X,
+  ShieldCheck, AlertCircle, CheckCircle2, XCircle,
+  Download, Printer, UserCheck, Stamp, Lock,
+  Edit3, Building2, PlusCircle, Trash2, Send, Copy, Check
 } from 'lucide-react';
 
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy}
+      title="Copy IS Number"
+      className="ml-2 p-1 bg-gray-50 hover:bg-gray-200 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center shadow-sm"
+    >
+      {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+    </button>
+  );
+};
+
 const CONFIDENCE_LABELS = [
-  { min: 0.75, label: 'High Confidence', color: 'text-green-700 bg-green-100 border-green-300' },
-  { min: 0.50, label: 'Moderate Confidence', color: 'text-blue-700 bg-blue-100 border-blue-300' },
-  { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300' },
+  { min: 0.75, label: 'High Confidence', color: 'text-green-700 bg-green-100 border-green-300', bar: 'bg-green-500' },
+  { min: 0.50, label: 'Moderate Confidence', color: 'text-blue-700 bg-blue-100 border-blue-300', bar: 'bg-blue-500' },
+  { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300', bar: 'bg-yellow-400' },
 ];
 
 function getConfidenceLabel(score) {
   for (const band of CONFIDENCE_LABELS) {
     if (score >= band.min) return band;
   }
-  return { label: 'Uncertain', color: 'text-gray-600 bg-gray-100 border-gray-300' };
+  return { label: 'Uncertain', color: 'text-gray-600 bg-gray-100 border-gray-300', bar: 'bg-gray-400' };
 }
+
+const ConfidenceMeter = ({ score }) => {
+  const conf = getConfidenceLabel(score);
+  const percent = (score * 100).toFixed(0);
+  
+  return (
+    <div className="flex flex-col gap-1 w-32 shrink-0 ml-auto">
+      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+        <span className={conf.color.split(' ')[0]}>{conf.label}</span>
+        <span className={conf.color.split(' ')[0]}>{percent}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className={`h-full ${conf.bar} transition-all duration-1000 ease-out`} 
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
+const TENDER_SCENARIOS = {
+  bridge: {
+    label: "🌉 Highway Bridge",
+    text: `PROCUREMENT TENDER #BR-2026-99102
+PROJECT: MAJOR HIGHWAY BRIDGE CONSTRUCTION (PIER & DECK SLAB)
+
+1. Scope of Work
+Supply and quality verification of heavy civil structural materials for bridge pier foundations and prestressed girder sections.
+
+2. Cementitious Materials Requirement
+The contractor must supply 43 Grade Ordinary Portland Cement (OPC) conforming to IS specifications. 
+The cement must achieve minimum 28-day compressive strength of 43.0 MPa. Total sulfur content calculated as sulfuric anhydride (SO3) shall not exceed 3.5% by mass.
+
+3. Structural Steel & Reinforcement
+All structural steel sections and high-strength deformed steel bars (Fe 500 Grade) must comply with mandatory BIS standards and bear valid ISI Certification Marks.`
+  },
+  hospital: {
+    label: "⚡ Hospital Electrical",
+    text: `PROCUREMENT TENDER #MED-EL-2026-004
+PROJECT: AIIMS ICU WARD ELECTRICAL WIRING & SAFETY GEAR
+
+1. Scope of Work
+Procurement of heavy-duty electrical cables and personnel safety equipment for the new Intensive Care Unit block.
+
+2. Wiring & Cables
+All underground and concealed wiring must utilize PVC insulated (heavy duty) electric cables suitable for working voltages up to and including 1100 V. The cables must bear the standard ISI mark for safety compliance.
+
+3. Personnel Safety Gear
+To ensure the safety of our maintenance electricians working on live ICU panels, the vendor must supply solid rubber gloves for electrical purposes. These gloves must withstand high voltage without degradation and meet all Indian safety standards.`
+  },
+  water: {
+    label: "🚰 Water Pipeline",
+    text: `PROCUREMENT TENDER #WATER-2026-887
+PROJECT: MUNICIPAL DRINKING WATER DISTRIBUTION UPGRADE
+
+1. Scope of Work
+Installation of primary water distribution pipelines and verification of drinking water quality for the new municipal zone.
+
+2. Piping Materials
+The contractor shall lay precast concrete pipes (with and without reinforcement) for the main drainage and distribution network. These pipes must meet strict structural integrity standards for underground utilities.
+
+3. Water Quality Assurance
+Before final commissioning, the water running through the pipes must be tested for human consumption. It must meet the official drinking water specifications, with strict limits on turbidity, dissolved solids, and bacterial contamination.`
+  }
+};
+
+
 
 export default function TenderSimulator() {
   const { user } = useAuth();
@@ -31,8 +122,40 @@ export default function TenderSimulator() {
   const [openClauses, setOpenClauses] = useState({});
   const fileRef = useRef();
 
+  // --- AI Compliance Screening State ---
+  const [screeningData, setScreeningData] = useState(null);
+  const [screeningLoading, setScreeningLoading] = useState(false);
+  const [screeningError, setScreeningError] = useState('');
+  const [activePreset, setActivePreset] = useState(null);
+
+  // --- Custom Bid & Lab Test Entry State ---
+  const [showCustomBidForm, setShowCustomBidForm] = useState(false);
+  const [customMaterialName, setCustomMaterialName] = useState('');
+  const [customBidderName, setCustomBidderName] = useState('Vendor Technical Proposal');
+  const [customLabReportNo, setCustomLabReportNo] = useState('NABL/TC-2026/8941');
+  const [customParams, setCustomParams] = useState([]);
+
+  // --- Engineer Review & Decision State ---
+  const [engineerDecision, setEngineerDecision] = useState('approve');
+  const [engineerNotes, setEngineerNotes] = useState('');
+  const [isDecisionRecorded, setIsDecisionRecorded] = useState(false);
+  const [recordedAuditId, setRecordedAuditId] = useState(null);
+  const [recordedTimestamp, setRecordedTimestamp] = useState(null);
+
   const toggleClause = (idx) =>
     setOpenClauses(prev => ({ ...prev, [idx]: !prev[idx] }));
+
+  const loadSampleTender = (scenarioKey = 'bridge') => {
+    setMode('paste');
+    setText(TENDER_SCENARIOS[scenarioKey].text);
+    setError('');
+  };
+
+  const handleRecordDecision = () => {
+    setIsDecisionRecorded(true);
+    setRecordedAuditId(`AUDIT-2026-IS-${Math.floor(100000 + Math.random() * 900000)}`);
+    setRecordedTimestamp(new Date().toLocaleString());
+  };
 
   const reset = () => {
     setResults(null);
@@ -40,7 +163,324 @@ export default function TenderSimulator() {
     setText('');
     setFile(null);
     setOpenClauses({});
+    setScreeningData(null);
+    setScreeningError('');
+    setActivePreset(null);
+    setShowCustomBidForm(false);
+    setCustomMaterialName('');
+    setCustomBidderName('Vendor Technical Proposal');
+    setCustomLabReportNo('NABL/TC-2026/8941');
+    setCustomParams([]);
+    setEngineerDecision('approve');
+    setEngineerNotes('');
+    setIsDecisionRecorded(false);
+    setRecordedAuditId(null);
+    setRecordedTimestamp(null);
   };
+
+  const handleExportPDF = () => {
+    if (!results) return;
+    const allStds = [];
+    results.results.forEach(clause => {
+      clause.recommendedStandards.forEach(std => {
+        if (!allStds.find(s => s.isNumber === std.isNumber)) {
+          allStds.push(std);
+        }
+      });
+    });
+
+    const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>BIS Compliance Report - ${results.documentName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
+          .header { border-bottom: 3px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 20px; }
+          .logo { font-size: 20px; font-weight: 900; color: #1e3a5f; }
+          .logo span { color: #0d9488; }
+          .report-title { font-size: 16px; font-weight: bold; margin-top: 8px; color: #1e3a5f; }
+          .meta { display: flex; gap: 24px; margin-top: 8px; }
+          .meta-item { font-size: 11px; color: #555; }
+          .meta-item strong { color: #1a1a1a; }
+          .section-title { font-size: 13px; font-weight: bold; color: #1e3a5f; border-left: 4px solid #1e3a5f; padding-left: 8px; margin: 20px 0 10px; }
+          .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+          .kpi { background: #f0f4ff; border: 1px solid #c7d5f0; border-radius: 6px; padding: 10px 14px; }
+          .kpi .num { font-size: 22px; font-weight: 900; color: #1e3a5f; }
+          .kpi .label { font-size: 10px; color: #555; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; font-size: 11px; }
+          th { background: #1e3a5f; color: white; padding: 8px 10px; text-align: left; }
+          td { padding: 7px 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+          tr:nth-child(even) td { background: #f9fafb; }
+          .badge-high { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .badge-med { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .badge-low { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+          .clause-text { color: #444; font-style: italic; font-size: 10px; margin-top: 3px; max-width: 280px; }
+          .footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 10px; color: #888; display: flex; justify-content: space-between; }
+          .disclaimer { margin-top: 16px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; font-size: 10px; color: #78350f; }
+          @media print {
+            body { padding: 20px; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo"><span>Niryana</span>AI</div>
+          <div class="report-title">BIS Compliance Checklist Report</div>
+          <div class="meta">
+            <div class="meta-item"><strong>Document:</strong> ${results.documentName}</div>
+            <div class="meta-item"><strong>Generated:</strong> ${now}</div>
+            <div class="meta-item"><strong>Powered by:</strong> NiryanaAI / GeM Tender Simulator</div>
+          </div>
+        </div>
+
+        <div class="section-title">Executive Summary</div>
+        <div class="summary-grid">
+          <div class="kpi"><div class="num">${results.analyzedClauses}</div><div class="label">Clauses Analyzed</div></div>
+          <div class="kpi"><div class="num">${allStds.length}</div><div class="label">Unique IS Standards Mapped</div></div>
+          <div class="kpi"><div class="num">${results.results.filter(r => r.recommendedStandards.length > 0).length}</div><div class="label">Clauses with Standards Found</div></div>
+        </div>
+
+        <div class="section-title">BIS Compliance Checklist</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>IS Standard Number</th><th>Title</th><th>Confidence</th></tr>
+          </thead>
+          <tbody>
+            ${allStds.map((std, i) => {
+              const score = std.score;
+              let badgeClass = score >= 0.75 ? 'badge-high' : score >= 0.50 ? 'badge-med' : 'badge-low';
+              let badgeLabel = score >= 0.75 ? 'High' : score >= 0.50 ? 'Moderate' : 'Low';
+              return `<tr>
+                <td>${i + 1}</td>
+                <td><strong>${std.isNumber}</strong></td>
+                <td>${std.title}</td>
+                <td><span class="${badgeClass}">${(score * 100).toFixed(0)}% ${badgeLabel}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+
+        <div class="section-title">Clause-by-Clause Breakdown</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Clause Text</th><th>Mapped Standard(s)</th></tr>
+          </thead>
+          <tbody>
+            ${results.results.map((clause, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td><div class="clause-text">${clause.clauseText.substring(0, 180)}${clause.clauseText.length > 180 ? '...' : ''}</div></td>
+                <td>${clause.recommendedStandards.length > 0
+                  ? clause.recommendedStandards.slice(0,3).map(s => `<strong>${s.isNumber}</strong>`).join(', ')
+                  : '<em style="color:#999">No match found</em>'
+                }</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="disclaimer">
+          <strong>Disclaimer:</strong> This report is AI-generated by NiryanaAI for informational and procurement screening purposes only. 
+          Standards applicability must be verified against the official BIS publication before use in formal procurement proceedings.
+        </div>
+        <div class="footer">
+          <span>NiryanaAI — GeM Procurement Compliance Platform | SIH 2026</span>
+          <span>Report ID: NIRYANA-${Date.now().toString(36).toUpperCase()}</span>
+        </div>
+        <br/>
+        <button onclick="window.print()" style="background:#1e3a5f;color:white;border:none;padding:10px 24px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:8px;">
+          🖨 Print / Save as PDF
+        </button>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  };
+
+  const handleParamChange = (index, field, value) => {
+    setCustomParams(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddParam = () => {
+    setCustomParams(prev => [
+      ...prev,
+      { parameterName: 'Additional Specification Criterion', clauseNumber: '4.X', requiredValue: '10.0', proposedValue: '12.0', unit: '', operator: '>=' }
+    ]);
+  };
+
+  const handleRemoveParam = (index) => {
+    setCustomParams(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleScreenCustomBid = async (e) => {
+    if (e) e.preventDefault();
+    setActivePreset('custom');
+    setScreeningLoading(true);
+    setScreeningError('');
+
+    const isNumberSummary = allMatchedStandards.map(s => s.isNumber).slice(0, 2).join(' / ') || 'Applicable IS Standards';
+
+    try {
+      const res = await api.post('/api/screen-compliance', {
+        isNumber: isNumberSummary,
+        materialName: `${customMaterialName || 'Procured Material'} (Bidder: ${customBidderName || 'Vendor'})`,
+        parameters: customParams
+      });
+      setScreeningData({
+        ...res.data,
+        bidderName: customBidderName,
+        labReportNo: customLabReportNo
+      });
+    } catch (err) {
+      setScreeningError(err.response?.data?.error || 'Compliance screening failed');
+    } finally {
+      setScreeningLoading(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    const exportPayload = {
+      portal: 'NiryanaAI GeM-Style Procurement Simulator',
+      purpose: 'Demonstration and Evaluation Purposes Only',
+      tenderDocument: results?.documentName || 'tender_spec.txt',
+      materialDomain: customMaterialName || results?.materialName || 'General Procurement Spec',
+      analyzedClausesCount: results?.analyzedClauses || 0,
+      mappedStandards: allMatchedStandards.map(s => ({
+        isNumber: s.isNumber,
+        title: s.title,
+        confidenceScore: s.score
+      })),
+      complianceScreening: screeningData ? {
+        ...screeningData,
+        bidderName: screeningData.bidderName || customBidderName,
+        labReportNo: screeningData.labReportNo || customLabReportNo
+      } : {
+        status: 'PENDING_SCREENING',
+        note: 'Vendor test evidence screening not performed'
+      },
+      engineerReview: {
+        officer: user?.username || 'Procurement Officer',
+        role: user?.role || 'user',
+        decision: engineerDecision,
+        remarks: engineerNotes || 'Standard compliance verified.',
+        decisionTimestamp: new Date().toISOString()
+      },
+      regulatoryNotice: 'Generated via AI procurement screening simulator. For official procurement, cross-verify with BIS Gazette.',
+      auditTimestamp: new Date().toISOString()
+    };
+
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `GeM_Compliance_Audit_${results?.documentName || 'tender'}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const runScreening = async (presetType) => {
+    setActivePreset(presetType);
+    setScreeningLoading(true);
+    setScreeningError('');
+
+    const activeParams = customParams.length > 0 ? customParams : (results?.extractedParameters || []);
+    
+    let bidderName = 'Vendor Supplies Consortium';
+    let labReportNo = 'NABL-2026-CERT-01';
+
+    if (presetType === 'compliant') {
+      bidderName = `${customMaterialName ? customMaterialName.split(' ')[0] : 'Certified'} Quality Supplies Ltd`;
+      labReportNo = 'NABL/2026/PASS-9102';
+    } else if (presetType === 'non_compliant') {
+      bidderName = 'Substandard Trading & Supplies Co.';
+      labReportNo = 'QC-FAIL-2026-044';
+    } else if (presetType === 'verify') {
+      bidderName = 'National Industrial Supplies Pvt Ltd';
+      labReportNo = 'REV-AUDIT-2026-11';
+    }
+
+    const parameters = activeParams.map(p => {
+      let proposedVal = p.proposedValue;
+      if (presetType === 'compliant') {
+        if (p.compliantValue) {
+          proposedVal = p.compliantValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.75).toFixed(1) : p.requiredValue;
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.1).toFixed(1) : p.requiredValue;
+        } else if (p.operator === 'between') {
+          const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+          proposedVal = parts.length === 2 ? ((parts[0] + parts[1]) / 2).toFixed(2) : p.requiredValue;
+        } else {
+          proposedVal = 'Valid & Active (CM/L-9812450)';
+        }
+      } else if (presetType === 'non_compliant') {
+        if (p.nonCompliantValue) {
+          proposedVal = p.nonCompliantValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.3).toFixed(1) : 'Excessive';
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.8).toFixed(1) : 'Substandard';
+        } else if (p.operator === 'between') {
+          const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+          proposedVal = parts.length === 2 ? (Math.max(parts[0], parts[1]) * 1.25).toFixed(2) : 'Out of Range';
+        } else {
+          proposedVal = 'Expired / Revoked';
+        }
+      } else if (presetType === 'verify') {
+        if (p.borderlineValue) {
+          proposedVal = p.borderlineValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.02).toFixed(2) : p.requiredValue;
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.97).toFixed(1) : p.requiredValue;
+        } else {
+          proposedVal = 'Pending Renewal Audit';
+        }
+      }
+      return { ...p, proposedValue: String(proposedVal) };
+    });
+
+    setCustomBidderName(bidderName);
+    setCustomLabReportNo(labReportNo);
+    setCustomParams(parameters);
+    setShowCustomBidForm(true);
+
+    const isNumberSummary = allMatchedStandards.map(s => s.isNumber).slice(0, 2).join(' / ') || 'Applicable IS Standards';
+
+    try {
+      const res = await api.post('/api/screen-compliance', {
+        isNumber: isNumberSummary,
+        materialName: `${customMaterialName || 'Procured Material'} (${bidderName})`,
+        parameters
+      });
+      setScreeningData({
+        ...res.data,
+        bidderName,
+        labReportNo
+      });
+    } catch (err) {
+      setScreeningError(err.response?.data?.error || 'Compliance screening failed');
+    } finally {
+      setScreeningLoading(false);
+    }
+  };
+
 
   const handleSubmit = async () => {
     setError('');
@@ -59,10 +499,21 @@ export default function TenderSimulator() {
         form.append('file', file, file.name);
       }
 
-      const res = await axios.post('http://localhost:5000/api/analyze-tender', form, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.post('/api/analyze-tender', form);
       setResults(res.data);
+      if (res.data.materialName) {
+        setCustomMaterialName(res.data.materialName);
+      }
+      if (res.data.extractedParameters && res.data.extractedParameters.length > 0) {
+        setCustomParams(res.data.extractedParameters);
+        setShowCustomBidForm(true);
+      } else {
+        setCustomParams([
+          { parameterName: 'General Specification Compliance', clauseNumber: '1.0', requiredValue: 'valid', proposedValue: 'Conforming to IS Requirements', unit: '', operator: 'includes' },
+          { parameterName: 'Mandatory BIS ISI Certification Mark', clauseNumber: '2.0', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' }
+        ]);
+        setShowCustomBidForm(true);
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Analysis failed. Please try again.');
     } finally {
@@ -94,20 +545,36 @@ export default function TenderSimulator() {
 
       {!results ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          {/* Mode Toggle */}
-          <div className="flex rounded-md overflow-hidden border border-gray-200 mb-6 w-fit">
-            <button
-              onClick={() => setMode('paste')}
-              className={`px-5 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              📋 Paste Text
-            </button>
-            <button
-              onClick={() => setMode('upload')}
-              className={`px-5 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${mode === 'upload' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-            >
-              📁 Upload File (PDF / TXT)
-            </button>
+          {/* Mode Toggle & Demo Preset */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex rounded-md overflow-hidden border border-gray-200 w-fit">
+              <button
+                onClick={() => setMode('paste')}
+                className={`px-5 py-2 text-sm font-medium transition-colors ${mode === 'paste' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                📋 Paste Text
+              </button>
+              <button
+                onClick={() => setMode('upload')}
+                className={`px-5 py-2 text-sm font-medium transition-colors border-l border-gray-200 ${mode === 'upload' ? 'bg-primary text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                📁 Upload File (PDF / TXT)
+              </button>
+            </div>
+
+            <div className="flex gap-2 items-center overflow-x-auto pb-1 max-w-full">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">Demo:</span>
+              {Object.entries(TENDER_SCENARIOS).map(([key, scenario]) => (
+                <button
+                  key={key}
+                  onClick={() => loadSampleTender(key)}
+                  className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-secondary hover:text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-md transition-colors shadow-sm"
+                  title={`Load ${scenario.label} tender`}
+                >
+                  {scenario.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Input Area */}
@@ -175,9 +642,17 @@ export default function TenderSimulator() {
                 <span className="font-semibold">{allMatchedStandards.length}</span> unique BIS standard(s) mapped.
               </p>
             </div>
-            <button onClick={reset} className="flex items-center gap-1 text-sm text-green-700 hover:text-green-900 border border-green-300 px-3 py-1.5 rounded-md">
-              <X size={14} /> New Analysis
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportPDF}
+                className="flex items-center gap-1 text-sm text-white bg-primary hover:bg-blue-900 border border-blue-800 px-3 py-1.5 rounded-md transition-colors"
+              >
+                <Download size={14} /> Export PDF
+              </button>
+              <button onClick={reset} className="flex items-center gap-1 text-sm text-green-700 hover:text-green-900 border border-green-300 px-3 py-1.5 rounded-md">
+                <X size={14} /> New Analysis
+              </button>
+            </div>
           </div>
 
           {/* Compliance Checklist Summary */}
@@ -190,16 +665,357 @@ export default function TenderSimulator() {
                 {allMatchedStandards.map((std, idx) => (
                   <li key={idx} className="flex items-center gap-3 py-2.5">
                     <CheckCircle size={16} className="text-green-500 shrink-0" />
-                    <span className="font-bold text-primary text-sm w-32 shrink-0">{std.isNumber}</span>
+                    <div className="w-40 shrink-0 flex items-center">
+                      <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                      <CopyButton text={std.isNumber} />
+                    </div>
                     <span className="text-gray-700 text-sm">{std.title}</span>
-                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded border ${getConfidenceLabel(std.score).color}`}>
-                      {getConfidenceLabel(std.score).label}
-                    </span>
+                    <ConfidenceMeter score={std.score} />
                   </li>
                 ))}
               </ul>
             </div>
           )}
+
+          {/* AI COMPLIANCE SCREENING PANEL (Flowchart Steps 5 & 6) */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div>
+                <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                  <ShieldCheck className="text-secondary" size={22} /> AI Compliance Screening
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Screen vendor lab test reports against mandatory Indian Standard requirements.
+                </p>
+              </div>
+
+              {/* Simulation Preset Buttons & Custom Bid Toggle */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomBidForm(prev => !prev)}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors border ${
+                    showCustomBidForm
+                      ? 'bg-blue-900 text-white border-blue-900 shadow-sm'
+                      : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border-blue-300'
+                  }`}
+                >
+                  <Edit3 size={14} /> ✍️ Enter Custom Bid
+                </button>
+                <button
+                  onClick={() => runScreening('compliant')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'compliant'
+                      ? 'bg-green-700 text-white shadow-sm'
+                      : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-300'
+                  }`}
+                >
+                  <CheckCircle2 size={14} /> 🟢 Simulate Compliant Bid
+                </button>
+                <button
+                  onClick={() => runScreening('verify')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'verify'
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-300'
+                  }`}
+                >
+                  <AlertCircle size={14} /> 🟡 Simulate Borderline (Verify)
+                </button>
+                <button
+                  onClick={() => runScreening('non_compliant')}
+                  disabled={screeningLoading}
+                  className={`px-3 py-1.5 rounded text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                    activePreset === 'non_compliant'
+                      ? 'bg-red-700 text-white shadow-sm'
+                      : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-300'
+                  }`}
+                >
+                  <XCircle size={14} /> 🔴 Simulate Defective Bid
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Bid Submission Drawer / Form */}
+            {showCustomBidForm && (
+              <div className="bg-slate-50 border border-blue-200 rounded-lg p-5 mb-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="text-primary" size={20} />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-gray-800 text-sm">Vendor Bid &amp; Lab Test Report Submission</h3>
+                        {activePreset && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            activePreset === 'compliant' ? 'bg-green-100 text-green-800 border border-green-200' :
+                            activePreset === 'verify' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                            activePreset === 'non_compliant' ? 'bg-red-100 text-red-800 border border-red-200' :
+                            'bg-blue-100 text-blue-800 border border-blue-200'
+                          }`}>
+                            Preset: {activePreset.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500">Enter contractor credentials and submitted NABL lab test values to evaluate against BIS clause specifications.</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomBidForm(false)}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    ✕ Close Form
+                  </button>
+                </div>
+
+                {/* Material Domain & Extraction Badge */}
+                {customMaterialName && (
+                  <div className="mb-4 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-md flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-900 font-semibold">Tender Scope:</span>
+                      <span className="font-bold text-gray-800">{customMaterialName}</span>
+                    </div>
+                    <span className="text-blue-800 font-medium text-[11px] bg-white px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                      ⚡ AI Extracted: {customParams.length} technical requirement{customParams.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      Bidder / Vendor Name
+                    </label>
+                    <input
+                      type="text"
+                      value={customBidderName}
+                      onChange={e => setCustomBidderName(e.target.value)}
+                      placeholder="e.g. Apex Engineering & Supplies Ltd"
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-primary focus:border-primary bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                      NABL Lab Test Report / Certificate #
+                    </label>
+                    <input
+                      type="text"
+                      value={customLabReportNo}
+                      onChange={e => setCustomLabReportNo(e.target.value)}
+                      placeholder="e.g. NABL/TC-2026/8941"
+                      className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs font-mono focus:ring-primary focus:border-primary bg-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Interactive Parameters Table */}
+                <div className="border border-gray-200 rounded-md overflow-hidden bg-white mb-3">
+                  {customParams.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-gray-500">
+                      No technical parameters found. Click "+ Add Another Parameter" below to define custom criteria.
+                    </div>
+                  ) : (
+                    <table className="min-w-full divide-y divide-gray-200 text-xs">
+                      <thead className="bg-gray-100 text-gray-600 font-semibold uppercase">
+                        <tr>
+                          <th className="px-3 py-2 text-left w-20">Clause</th>
+                          <th className="px-3 py-2 text-left">Parameter Name</th>
+                          <th className="px-3 py-2 text-left w-36">Required Criteria</th>
+                          <th className="px-3 py-2 text-left w-48">Submitted Vendor Value</th>
+                          <th className="px-3 py-2 text-center w-12">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {customParams.map((p, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.clauseNumber}
+                                onChange={e => handleParamChange(idx, 'clauseNumber', e.target.value)}
+                                className="w-full border border-gray-200 rounded px-1.5 py-1 text-[11px] font-mono"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.parameterName}
+                                onChange={e => handleParamChange(idx, 'parameterName', e.target.value)}
+                                className="w-full border border-gray-200 rounded px-2 py-1 text-xs font-medium"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-gray-700 font-mono text-xs">
+                              <span className="font-semibold text-primary">{p.operator === 'between' ? 'between' : p.operator}</span> {p.requiredValue} {p.unit}
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.proposedValue}
+                                onChange={e => handleParamChange(idx, 'proposedValue', e.target.value)}
+                                placeholder="Submitted value"
+                                className="w-full border border-blue-300 rounded px-2 py-1 text-xs font-bold font-mono focus:ring-1 focus:ring-primary bg-blue-50/40"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveParam(idx)}
+                                className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                title="Remove Parameter"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleAddParam}
+                    className="text-xs font-semibold text-primary hover:text-blue-900 flex items-center gap-1"
+                  >
+                    <PlusCircle size={14} /> + Add Another Parameter
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleScreenCustomBid}
+                    disabled={screeningLoading}
+                    className="px-5 py-2 bg-primary hover:bg-blue-900 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+                  >
+                    <Send size={13} /> 🔍 Screen &amp; Evaluate Bid Against BIS
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {screeningLoading && (
+              <div className="flex items-center justify-center py-8 text-sm text-gray-500 gap-2">
+                <Loader2 size={20} className="animate-spin text-primary" />
+                Cross-checking vendor lab evidence against BIS clause limits...
+              </div>
+            )}
+
+            {screeningError && (
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded border border-red-200">
+                {screeningError}
+              </div>
+            )}
+
+            {!screeningData && !screeningLoading && (
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-sm text-gray-500">
+                <p className="font-medium text-gray-700 mb-1">No test evidence screened yet.</p>
+                <p className="text-xs text-gray-400">
+                  Click <span className="font-semibold text-blue-800">✍️ Enter Custom Bid</span> to submit contractor lab numbers, or use one of the quick simulation buttons above (e.g. <span className="font-semibold text-green-700">🟢 Compliant</span> or <span className="font-semibold text-red-700">🔴 Defective</span>).
+                </p>
+              </div>
+            )}
+
+            {screeningData && !screeningLoading && (
+              <div className="space-y-4 mt-2">
+                {/* Tri-Color Verdict Banner */}
+                <div
+                  className={`p-4 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                    screeningData.overallStatus === 'COMPLIANT'
+                      ? 'bg-green-50 border-green-300 text-green-900'
+                      : screeningData.overallStatus === 'VERIFY'
+                      ? 'bg-amber-50 border-amber-300 text-amber-900'
+                      : 'bg-red-50 border-red-300 text-red-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5">
+                    {screeningData.overallStatus === 'COMPLIANT' ? (
+                      <div className="w-12 h-12 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={28} className="text-green-600" />
+                      </div>
+                    ) : screeningData.overallStatus === 'VERIFY' ? (
+                      <div className="w-12 h-12 rounded-full bg-amber-100 border-2 border-amber-500 flex items-center justify-center shrink-0">
+                        <AlertCircle size={28} className="text-amber-600" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-red-100 border-2 border-red-500 flex items-center justify-center shrink-0">
+                        <XCircle size={28} className="text-red-600" />
+                      </div>
+                    )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-lg tracking-wide uppercase">
+                          {screeningData.overallStatus}
+                        </span>
+                        <span className="text-xs bg-white/80 px-2 py-0.5 rounded border border-gray-300 font-medium text-gray-700">
+                          {screeningData.isNumber}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-1 font-medium">{screeningData.summary}</p>
+                      {screeningData.bidderName && (
+                        <div className="text-[11px] font-medium text-gray-700 mt-1 flex items-center gap-2">
+                          <span>Bidder: <strong className="text-gray-900">{screeningData.bidderName}</strong></span>
+                          {screeningData.labReportNo && (
+                            <span>• Lab Report: <span className="font-mono text-gray-800">#{screeningData.labReportNo}</span></span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-xs font-mono text-gray-500 bg-white/60 px-2 py-1 rounded border border-gray-200">
+                      Evaluated: {new Date(screeningData.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Evidence Parameter Table */}
+                <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200 text-xs">
+                    <thead className="bg-gray-50 text-gray-600 font-semibold uppercase tracking-wider">
+                      <tr>
+                        <th className="px-3 py-2 text-left">IS Clause</th>
+                        <th className="px-3 py-2 text-left">Technical Parameter</th>
+                        <th className="px-3 py-2 text-left">Mandatory Standard Criteria</th>
+                        <th className="px-3 py-2 text-left">Submitted Vendor Test Evidence</th>
+                        <th className="px-3 py-2 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 bg-white">
+                      {screeningData.evaluatedParameters.map((p, pIdx) => (
+                        <tr key={pIdx} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-mono text-gray-500">Cl. {p.clauseNumber}</td>
+                          <td className="px-3 py-2 font-medium text-gray-900">{p.parameterName}</td>
+                          <td className="px-3 py-2 text-gray-600 font-mono">
+                            {p.requiredValue} {p.unit}
+                          </td>
+                          <td className="px-3 py-2 font-mono font-semibold text-gray-800">
+                            {p.proposedValue} {p.unit}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded font-bold uppercase tracking-wider text-[11px] border ${
+                                p.status === 'PASS'
+                                  ? 'bg-green-100 text-green-800 border-green-300'
+                                  : p.status === 'BORDERLINE'
+                                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                  : 'bg-red-100 text-red-800 border-red-300'
+                              }`}
+                            >
+                              {p.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+
 
           {/* Per-Clause Breakdown */}
           <h2 className="font-bold text-gray-800 mb-3 text-lg">Clause-by-Clause Breakdown</h2>
@@ -239,12 +1055,13 @@ export default function TenderSimulator() {
                               <li key={sIdx} className="flex items-center gap-3 bg-white border border-gray-200 rounded p-3">
                                 <FileText size={16} className="text-primary shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                                  <div className="flex items-center">
+                                    <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                                    <CopyButton text={std.isNumber} />
+                                  </div>
                                   <p className="text-xs text-gray-600 truncate">{std.title}</p>
                                 </div>
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded border shrink-0 ${conf.color}`}>
-                                  {(std.score * 100).toFixed(0)}% — {conf.label}
-                                </span>
+                                <ConfidenceMeter score={std.score} />
                               </li>
                             );
                           })}
@@ -259,6 +1076,215 @@ export default function TenderSimulator() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* STEP 7: QUALIFIED ENGINEER REVIEW & PROCUREMENT DECISION */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 my-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <UserCheck className="text-primary" size={22} />
+              <div>
+                <h2 className="font-bold text-gray-800 text-lg">Qualified Engineer Review &amp; Procurement Decision</h2>
+                <p className="text-xs text-gray-500">
+                  Qualified Engineer / Department Authority reviews AI findings and evidence to record the final determination.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Decision Options */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                  Procurement Determination
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('approve')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'approve'
+                        ? 'border-green-600 bg-green-50/80 ring-2 ring-green-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-green-800">
+                      <CheckCircle2 size={16} /> Approve
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Meets all required standards and lab criteria.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('conditional')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'conditional'
+                        ? 'border-amber-600 bg-amber-50/80 ring-2 ring-amber-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-amber-800">
+                      <AlertCircle size={16} /> Approve w/ Conditions
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Subject to revised calibration or NABL test proof.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('reject')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'reject'
+                        ? 'border-red-600 bg-red-50/80 ring-2 ring-red-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-red-800">
+                      <XCircle size={16} /> Reject Bid
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Failed mandatory BIS threshold limits.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('retender')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'retender'
+                        ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-blue-800">
+                      <ClipboardList size={16} /> Seek Re-tender
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Specifications require scope re-evaluation.</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Remarks Textarea */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Official Technical Remarks &amp; Audit Trail Notes
+                </label>
+                <textarea
+                  rows={3}
+                  value={engineerNotes}
+                  disabled={isDecisionRecorded}
+                  onChange={e => setEngineerNotes(e.target.value)}
+                  placeholder="Enter engineer justification, verification caveats, or conditions for procurement approval..."
+                  className={`w-full border rounded-md p-2.5 text-xs font-sans focus:ring-primary focus:border-primary resize-none ${
+                    isDecisionRecorded ? 'bg-gray-100 text-gray-700 border-gray-200 cursor-not-allowed' : 'border-gray-300'
+                  }`}
+                />
+              </div>
+
+              {/* Record Decision Action / Status Banner */}
+              {!isDecisionRecorded ? (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleRecordDecision}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-blue-900 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+                  >
+                    <Stamp size={16} /> 📝 Record &amp; Digitally Sign Determination
+                  </button>
+                  <span className="text-[11px] text-gray-500 italic">
+                    Stamps the decision with an immutable audit ID and locks the remarks for official export.
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-green-50 border-2 border-green-500/80 rounded-lg p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold shrink-0">
+                      <Lock size={18} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs uppercase tracking-wider text-green-900">
+                          Determination Finalized &amp; Locked
+                        </span>
+                        <span className="text-[11px] font-mono bg-white px-2 py-0.5 rounded border border-green-300 font-semibold text-green-800">
+                          {recordedAuditId}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-800 mt-0.5">
+                        Recorded verdict: <strong className="uppercase">{engineerDecision}</strong> by <strong>{user?.username || 'Procurement Officer'}</strong> on {recordedTimestamp}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDecisionRecorded(false)}
+                    className="text-xs text-green-800 hover:text-green-950 underline font-semibold shrink-0"
+                  >
+                    ✏️ Unlock / Modify
+                  </button>
+                </div>
+              )}
+
+
+              <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                <span>Signed as: <strong className="text-gray-800">{user?.username || 'Procurement Officer'}</strong> ({user?.role || 'user'})</span>
+                <span className="text-green-700 font-semibold flex items-center gap-1">
+                  <CheckCircle size={13} /> Digital Audit Trail Active
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 8: OUTPUTS & COMPLIANCE EXPORT */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div>
+              <h3 className="font-bold text-primary text-sm flex items-center gap-2">
+                <FileText size={18} /> Procurement Compliance Export (Outputs)
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Download machine-readable JSON audit trail or print the official GeM-style Compliance Sheet.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleExportJSON}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+              >
+                <Download size={14} /> Export JSON Audit
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-primary hover:bg-blue-900 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+              >
+                <Printer size={14} /> Print / Save PDF Sheet
+              </button>
+            </div>
+          </div>
+
+          {/* KEY BENEFITS FOOTER (From Architecture Flowchart) */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+              Key System Benefits (Problem Statement #108)
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">🛡️ Correct IS</span>
+                <span className="text-[11px] text-gray-500">Ensures BIS compliance</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">⏱️ Early Risk Catch</span>
+                <span className="text-[11px] text-gray-500">Detects defects pre-award</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">💰 Quality Control</span>
+                <span className="text-[11px] text-gray-500">Improves public spend</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">👷 Decision Support</span>
+                <span className="text-[11px] text-gray-500">Empowers engineers</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100 col-span-2 sm:col-span-1">
+                <span className="block text-primary font-semibold mb-0.5">🏛️ Public Safety</span>
+                <span className="text-[11px] text-gray-500">Stronger infrastructure</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

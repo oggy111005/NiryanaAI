@@ -1,6 +1,117 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
-import { Plus, Save, Upload, Loader2 } from 'lucide-react';
+import api from '../api';
+import { Plus, Save, Upload, Loader2, Database, Users, Search, BarChart2, TrendingUp, Tag } from 'lucide-react';
+
+// ─── Admin Stats Dashboard ─────────────────────────────────────────────────
+function StatsBar() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get('/api/admin/stats')
+      .then(res => setStats(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-gray-400">
+        <Loader2 size={20} className="animate-spin mr-2" /> Loading dashboard stats...
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  return (
+    <div className="mb-8">
+      {/* KPI Cards */}
+      <h2 className="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+        <BarChart2 size={22} /> Admin Dashboard
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-blue-100 p-2 rounded-lg"><Database size={22} className="text-blue-600" /></div>
+          <div>
+            <p className="text-2xl font-bold text-blue-700">{stats.totalStandards}</p>
+            <p className="text-xs text-blue-500 font-medium">Total Standards</p>
+            <p className="text-xs text-blue-400">{stats.realStandards} verified</p>
+          </div>
+        </div>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-green-100 p-2 rounded-lg"><Users size={22} className="text-green-600" /></div>
+          <div>
+            <p className="text-2xl font-bold text-green-700">{stats.totalUsers}</p>
+            <p className="text-xs text-green-500 font-medium">Registered Users</p>
+          </div>
+        </div>
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-purple-100 p-2 rounded-lg"><Search size={22} className="text-purple-600" /></div>
+          <div>
+            <p className="text-2xl font-bold text-purple-700">{stats.totalSearches}</p>
+            <p className="text-xs text-purple-500 font-medium">Total Searches</p>
+          </div>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-amber-100 p-2 rounded-lg"><Tag size={22} className="text-amber-600" /></div>
+          <div>
+            <p className="text-2xl font-bold text-amber-700">{stats.categoryBreakdown?.length || 0}</p>
+            <p className="text-xs text-amber-500 font-medium">Categories</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Queries + Category Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Top Queries */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2 text-sm">
+            <TrendingUp size={16} className="text-purple-500" /> Top Searched Queries
+          </h3>
+          {stats.topQueries?.length > 0 ? (
+            <ol className="space-y-2">
+              {stats.topQueries.map((q, i) => (
+                <li key={i} className="flex items-center gap-3">
+                  <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="text-sm text-gray-600 truncate flex-1">{q.query}</span>
+                  <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">{q.count}x</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-gray-400 italic">No searches recorded yet.</p>
+          )}
+        </div>
+
+        {/* Category Breakdown */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2 text-sm">
+            <Database size={16} className="text-blue-500" /> Standards by Category
+          </h3>
+          {stats.categoryBreakdown?.length > 0 ? (
+            <ul className="space-y-2">
+              {stats.categoryBreakdown.map((c, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 flex-1 truncate">{c.category}</span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="h-2 rounded-full bg-blue-400"
+                      style={{ width: `${Math.max(20, (c.count / stats.realStandards) * 120)}px` }}
+                    />
+                    <span className="text-xs font-semibold text-blue-600 w-4 text-right">{c.count}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-400 italic">No category data available.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Admin() {
   const [formData, setFormData] = useState({
@@ -32,7 +143,7 @@ export default function Admin() {
     uploadData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/extract-standard', uploadData, {
+      const response = await api.post('/api/extract-standard', uploadData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -67,7 +178,7 @@ export default function Admin() {
     setLoading(true);
     setMessage('');
     try {
-      await axios.post('http://localhost:5000/api/standards', formData);
+      await api.post('/api/standards', formData);
       setMessage('Standard added successfully! Embeddings generated.');
       setFormData({
         isNumber: '',
@@ -88,6 +199,7 @@ export default function Admin() {
 
   return (
     <>
+    <StatsBar />
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-200">
       <h2 className="text-2xl font-bold text-primary mb-6 flex items-center">
         <Plus className="mr-2" /> Add New Standard
@@ -232,7 +344,7 @@ function RegisterUserContent() {
     setLoading(true);
     setMessage('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const res = await api.post('/api/auth/register', formData);
       setMessage(`Success! Created new ${res.data.role}: ${res.data.username}`);
       setFormData({ username: '', password: '', role: 'user' });
     } catch (err) {
@@ -296,7 +408,7 @@ function ManageUsersContent() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/auth/users');
+      const res = await api.get('/api/auth/users');
       setUsers(res.data);
     } catch (err) {
       setMessage('Failed to fetch users.');
@@ -308,7 +420,7 @@ function ManageUsersContent() {
   const handleDelete = async (id, username) => {
     if (!window.confirm(`Are you sure you want to delete user ${username}?`)) return;
     try {
-      await axios.delete(`http://localhost:5000/api/auth/users/${id}`);
+      await api.delete(`/api/auth/users/${id}`);
       setMessage(`User ${username} deleted.`);
       fetchUsers();
     } catch (err) {
@@ -319,7 +431,7 @@ function ManageUsersContent() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/api/auth/users/${editingUser._id}`, editFormData);
+      await api.put(`/api/auth/users/${editingUser._id}`, editFormData);
       setMessage(`User ${editingUser.username} updated.`);
       setEditingUser(null);
       fetchUsers();

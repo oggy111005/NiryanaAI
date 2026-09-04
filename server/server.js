@@ -50,6 +50,310 @@ const upload = multer({
   }
 });
 
+// Heuristic offline extraction for engineering tender specifications across domains
+function extractParametersHeuristic(text) {
+  const params = [];
+
+  let tenderTitle = 'Tender Technical Specifications';
+  let materialName = 'General Engineering Materials';
+
+  const titleMatch = text.match(/(?:PROJECT|WORK|TENDER FOR|NAME OF WORK)\s*[:\-]\s*([^\r\n]+)/i);
+  if (titleMatch) {
+    tenderTitle = titleMatch[1].trim();
+  }
+
+  // Material domain heuristics
+  if (/hdpe\s*pipe|polyethylene\s*pipe|water\s*supply\s*pipe|pvc\s*pipe|pipes?/i.test(text)) {
+    materialName = 'HDPE Water Supply Pipes (PE-100)';
+  } else if (/cement|portland|opc|concrete|bridge|girder/i.test(text)) {
+    materialName = 'Civil Infrastructure & Cementitious Materials';
+  } else if (/steel|reinforcement|rebar|tmt/i.test(text)) {
+    materialName = 'Structural Steel & Reinforcement Bars';
+  } else if (/bitumen|asphalt|road|pavement/i.test(text)) {
+    materialName = 'Bituminous Paving & Road Materials';
+  } else if (/cable|conductor|transformer|switchgear/i.test(text)) {
+    materialName = 'Electrical Distribution Equipment';
+  } else if (titleMatch) {
+    materialName = titleMatch[1].trim().substring(0, 50);
+  }
+
+  // 1. Compressive strength / Characteristic strength
+  const compMatch = text.match(/(?:(?:minimum|min\.?|at least)?\s*(?:(\d+)[ -]?day)?\s*compressive\s+strength|characteristic\s+strength)[^\d\r\n]*?(\d+(?:\.\d+)?)\s*(mpa|n\/mm[²2])/i);
+  if (compMatch) {
+    const days = compMatch[1] || '28';
+    const val = parseFloat(compMatch[2]);
+    params.push({
+      parameterName: `${days}-Day Compressive Strength`,
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: 'MPa',
+      proposedValue: (val * 1.1).toFixed(1),
+      compliantValue: (val * 1.1).toFixed(1),
+      nonCompliantValue: (val * 0.8).toFixed(1),
+      borderlineValue: (val * 0.97).toFixed(1)
+    });
+  }
+
+  // 2. Sulfur / SO3 Content
+  const so3Match = text.match(/(?:total\s+)?(?:sulfur|sulphur|so3|sulfuric\s+anhydride)[^\d\r\n]*?(?:shall not exceed|<=|max|maximum|not more than|less than)?\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (so3Match) {
+    const val = parseFloat(so3Match[1]);
+    params.push({
+      parameterName: 'Total Sulfur Content (SO3)',
+      clauseNumber: '2.1',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: '%',
+      proposedValue: (val * 0.75).toFixed(1),
+      compliantValue: (val * 0.75).toFixed(1),
+      nonCompliantValue: (val * 1.25).toFixed(1),
+      borderlineValue: (val * 1.02).toFixed(2)
+    });
+  }
+
+  // 3. Steel Grade / Yield Strength
+  const feMatch = text.match(/\bfe\s*([456]\d{2}(?:\s*d)?)\b/i);
+  const yieldMatch = text.match(/(?:yield\s+strength|0\.2%\s*proof\s+stress)[^\d\r\n]*?(?:minimum|min\.?|at least|>=)?\s*(\d+(?:\.\d+)?)\s*(n\/mm[²2]|mpa)?/i);
+  if (feMatch || yieldMatch) {
+    const grade = feMatch ? `Fe ${feMatch[1].toUpperCase()}` : 'High-Strength Steel';
+    const val = yieldMatch ? parseFloat(yieldMatch[1]) : (feMatch ? parseFloat(feMatch[1].replace(/\D/g, '')) : 500.0);
+    params.push({
+      parameterName: `${grade} Yield Strength`,
+      clauseNumber: '3.0',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: 'N/mm²',
+      proposedValue: (val * 1.07).toFixed(1),
+      compliantValue: (val * 1.07).toFixed(1),
+      nonCompliantValue: (val * 0.92).toFixed(1),
+      borderlineValue: (val * 0.98).toFixed(1)
+    });
+  }
+
+  // 4. Hydrostatic Pressure Test (for pipes/fittings)
+  const hydroMatch = text.match(/(?:hydrostatic(?:\s+test)?\s+pressure|internal\s+pressure|burst\s+pressure)[^\d\r\n]*?(?:minimum|min\.?|at least|of)?\s*(\d+(?:\.\d+)?)\s*(mpa|bar|kg\/cm[²2])/i);
+  if (hydroMatch) {
+    const val = parseFloat(hydroMatch[1]);
+    const unit = hydroMatch[2] || 'MPa';
+    params.push({
+      parameterName: 'Hydrostatic Pressure Test',
+      clauseNumber: '2.2',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: unit,
+      proposedValue: (val * 1.1).toFixed(2),
+      compliantValue: (val * 1.1).toFixed(2),
+      nonCompliantValue: (val * 0.8).toFixed(2),
+      borderlineValue: (val * 0.98).toFixed(2)
+    });
+  }
+
+  // 5. Carbon Black Content (for HDPE pipes/polymers)
+  const carbonMatch = text.match(/(?:carbon\s+black\s+content)[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*%?\s*(?:and|to)\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (carbonMatch) {
+    const min = parseFloat(carbonMatch[1]);
+    const max = parseFloat(carbonMatch[2]);
+    params.push({
+      parameterName: 'Carbon Black Content',
+      clauseNumber: '2.3',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: '%',
+      proposedValue: ((min + max) / 2).toFixed(2),
+      compliantValue: ((min + max) / 2).toFixed(2),
+      nonCompliantValue: (max * 1.25).toFixed(2),
+      borderlineValue: (max + 0.05).toFixed(2)
+    });
+  }
+
+  // 6. Melt Flow Rate (MFR)
+  const mfrMatch = text.match(/(?:melt\s+flow\s+rate|mfr)[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*(?:and|to)\s*(\d+(?:\.\d+)?)\s*(g\/10\s*min)/i);
+  if (mfrMatch) {
+    const min = parseFloat(mfrMatch[1]);
+    const max = parseFloat(mfrMatch[2]);
+    const unit = mfrMatch[3] || 'g/10 min';
+    params.push({
+      parameterName: 'Melt Flow Rate (MFR)',
+      clauseNumber: '2.4',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: unit,
+      proposedValue: ((min + max) / 2).toFixed(2),
+      compliantValue: ((min + max) / 2).toFixed(2),
+      nonCompliantValue: (max * 1.35).toFixed(2),
+      borderlineValue: (max + 0.03).toFixed(2)
+    });
+  }
+
+  // 7. Tensile Elongation at Break
+  const elongMatch = text.match(/(?:elongation(?:\s+at\s+break)?)[^\d\r\n]*?(?:not less than|minimum|min\.?|>=)?\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (elongMatch) {
+    const val = parseFloat(elongMatch[1]);
+    params.push({
+      parameterName: 'Tensile Elongation at Break',
+      clauseNumber: '2.5',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: '%',
+      proposedValue: (val * 1.15).toFixed(0),
+      compliantValue: (val * 1.15).toFixed(0),
+      nonCompliantValue: (val * 0.8).toFixed(0),
+      borderlineValue: (val * 0.98).toFixed(0)
+    });
+  }
+
+  // 8. Water Quality Parameters (TDS, pH, Turbidity, Hardness)
+  const tdsMatch = text.match(/(?:tds|total\s+dissolved\s+solids)[^\d\r\n]*?(?:below|less than|under|<=|not exceed|max|maximum|is)?\s*(\d+(?:\.\d+)?)\s*(mg\/l|ppm)?/i);
+  if (tdsMatch) {
+    const val = parseFloat(tdsMatch[1]);
+    const unit = tdsMatch[2] || 'mg/L';
+    params.push({
+      parameterName: 'Total Dissolved Solids (TDS)',
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: unit,
+      proposedValue: (val * 0.75).toFixed(0),
+      compliantValue: (val * 0.75).toFixed(0),
+      nonCompliantValue: (val * 1.3).toFixed(0),
+      borderlineValue: (val * 1.02).toFixed(0)
+    });
+  }
+
+  const phMatch = text.match(/\bph(?:\s+value)?\b[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*(?:and|to)\s*(\d+(?:\.\d+)?)/i);
+  if (phMatch) {
+    const min = parseFloat(phMatch[1]);
+    const max = parseFloat(phMatch[2]);
+    params.push({
+      parameterName: 'pH Value',
+      clauseNumber: '2.0',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: '',
+      proposedValue: ((min + max) / 2).toFixed(1),
+      compliantValue: ((min + max) / 2).toFixed(1),
+      nonCompliantValue: (max + 1.2).toFixed(1),
+      borderlineValue: (max + 0.1).toFixed(1)
+    });
+  }
+
+  const turbMatch = text.match(/(?:turbidity)[^\d\r\n]*?(?:below|less than|under|<=|not exceed|max|maximum)?\s*(\d+(?:\.\d+)?)\s*(ntu)?/i);
+  if (turbMatch) {
+    const val = parseFloat(turbMatch[1]);
+    params.push({
+      parameterName: 'Turbidity',
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: 'NTU',
+      proposedValue: (val * 0.7).toFixed(1),
+      compliantValue: (val * 0.7).toFixed(1),
+      nonCompliantValue: (val * 1.4).toFixed(1),
+      borderlineValue: (val * 1.05).toFixed(1)
+    });
+  }
+
+  // 9. BIS / ISI Certification Mark
+  const certMatch = text.match(/(?:isi\s*(?:certification)?\s*mark|bis\s*license|bis\s*certification|conforming to is)/i);
+  if (certMatch) {
+    params.push({
+      parameterName: 'BIS ISI Certification Mark',
+      clauseNumber: '6.1',
+      requiredValue: 'valid',
+      operator: 'includes',
+      unit: '',
+      proposedValue: 'Valid & Active (CM/L-9812450)',
+      compliantValue: 'Valid & Active (CM/L-9812450)',
+      nonCompliantValue: 'Expired / Revoked',
+      borderlineValue: 'Pending Renewal Audit'
+    });
+  }
+
+  return {
+    materialName,
+    tenderTitle,
+    parameters: params
+  };
+}
+
+// Universal AI tender specification extractor powered by Gemini with fallback
+async function extractTenderParametersWithAI(text) {
+  const model = getGeminiModel();
+  if (model) {
+    try {
+      const prompt = `You are a Bureau of Indian Standards (BIS) and Government e-Marketplace (GeM) technical procurement expert.
+Analyze the following tender document and extract:
+1. "materialName": Concise name of the procured item/material domain (e.g. "HDPE Water Supply Pipes (PE-100)", "Ordinary Portland Cement & Structural Steel", "Submersible Pumps", "Solar PV Modules", "Bituminous Road Surfacing").
+2. "tenderTitle": Project or procurement title if found in the text (or "Tender Technical Specifications").
+3. "parameters": An array of all technical specifications, physical/chemical criteria, test requirements, quality metrics, or certification conditions required by the tender.
+
+For each parameter in "parameters", provide:
+- "parameterName": Concise, specific technical parameter name (e.g. "Hydrostatic Pressure Test", "28-Day Compressive Strength", "Melt Flow Rate (MFR)", "Total Sulfur Content (SO3)", "Fe 500 Yield Strength", "BIS ISI Certification Mark").
+- "clauseNumber": The clause, section, or paragraph number from the tender (e.g. "2.2", "4.1", "1.0", or "General").
+- "requiredValue": The exact required numerical threshold or condition from the tender (e.g. "1.6", "35.0", "3.5", "500.0", "2.0 - 2.5", "valid").
+- "operator": One of: ">=", "<=", "between", "==", or "includes".
+- "unit": Unit of measurement (e.g. "MPa", "%", "N/mm²", "g/10 min", "mm", or "" if unitless).
+- "compliantValue": A realistic vendor test value that meets/passes this requirement.
+- "nonCompliantValue": A realistic vendor test value that fails this requirement.
+- "borderlineValue": A realistic vendor test value on the edge/borderline (within 5% of boundary or pending certification).
+
+TENDER TEXT:
+"""
+${text.substring(0, 4000)}
+"""
+
+Return ONLY a valid JSON object matching this structure with no markdown backticks or commentary:
+{
+  "materialName": "...",
+  "tenderTitle": "...",
+  "parameters": [
+    {
+      "parameterName": "...",
+      "clauseNumber": "...",
+      "requiredValue": "...",
+      "operator": "...",
+      "unit": "...",
+      "compliantValue": "...",
+      "nonCompliantValue": "...",
+      "borderlineValue": "..."
+    }
+  ]
+}`;
+
+      const aiPromise = model.generateContent(prompt);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('AI extraction timeout')), 8000));
+      const aiResult = await Promise.race([aiPromise, timeoutPromise]);
+      const rawText = aiResult.response.text().trim();
+      const cleaned = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      if (parsed && Array.isArray(parsed.parameters) && parsed.parameters.length > 0) {
+        return {
+          materialName: parsed.materialName || 'Procured Materials',
+          tenderTitle: parsed.tenderTitle || 'Tender Document',
+          parameters: parsed.parameters.map((p, idx) => ({
+            parameterName: String(p.parameterName || `Specification Criterion ${idx + 1}`),
+            clauseNumber: String(p.clauseNumber || `${idx + 1}.0`),
+            requiredValue: String(p.requiredValue || ''),
+            operator: ['>=', '<=', 'between', '==', 'includes'].includes(p.operator) ? p.operator : '>=',
+            unit: String(p.unit || ''),
+            proposedValue: String(p.compliantValue || p.requiredValue || ''),
+            compliantValue: String(p.compliantValue || p.requiredValue || ''),
+            nonCompliantValue: String(p.nonCompliantValue || ''),
+            borderlineValue: String(p.borderlineValue || '')
+          }))
+        };
+      }
+    } catch (geminiErr) {
+      console.warn('Gemini tender parameter extraction failed, falling back to heuristic parser:', geminiErr.message);
+    }
+  }
+
+  // Fallback to heuristic parser
+  return extractParametersHeuristic(text);
+}
+
 // 6. POST /api/analyze-tender (Tender Document Specification Analyzer - SIH Phase 5)
 app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
@@ -88,7 +392,7 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
       clauses.push(text.substring(0, 500));
     }
 
-    const allStandardsWithEmb = await Standard.find().select('+embedding').lean();
+    const allStandardsWithEmb = await Standard.find({ isDemo: { $ne: true } }).select('+embedding').lean();
     const analysisResults = [];
 
     for (const clause of clauses) {
@@ -109,8 +413,14 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
       });
     }
 
+    // Dynamic Parameter & Specification Extraction via Gemini AI (with heuristic fallback)
+    const extractedData = await extractTenderParametersWithAI(text);
+
     res.json({
       documentName: req.file.originalname,
+      materialName: extractedData.materialName,
+      tenderTitle: extractedData.tenderTitle,
+      extractedParameters: extractedData.parameters,
       analyzedClauses: analysisResults.length,
       results: analysisResults
     });
@@ -120,6 +430,100 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
     res.status(500).json({ error: 'Server error during tender analysis' });
   }
 });
+
+// 6b. POST /api/screen-compliance (AI Compliance Screening - SIH Phase 5)
+// Evaluates vendor test evidence against applicable standard requirements
+app.post('/api/screen-compliance', authenticateToken, async (req, res) => {
+  try {
+    const { isNumber, materialName, parameters } = req.body;
+    if (!isNumber) {
+      return res.status(400).json({ error: 'isNumber is required for compliance screening' });
+    }
+
+    const evaluatedParams = (parameters && Array.isArray(parameters) ? parameters : []).map(p => {
+      const requiredVal = parseFloat(p.requiredValue);
+      const proposedVal = parseFloat(p.proposedValue);
+      const op = p.operator || '>=';
+
+      let isPassing = true;
+      let isBorderline = false;
+
+      if (op === 'between' || String(p.requiredValue).includes('-')) {
+        const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        if (parts.length === 2) {
+          const min = Math.min(parts[0], parts[1]);
+          const max = Math.max(parts[0], parts[1]);
+          if (!isNaN(proposedVal)) {
+            isPassing = proposedVal >= min && proposedVal <= max;
+            if (!isPassing) {
+              const span = max - min || 1;
+              if (proposedVal >= min - span * 0.05 && proposedVal <= max + span * 0.05) {
+                isBorderline = true;
+              }
+            }
+          }
+        }
+      } else if (!isNaN(requiredVal) && !isNaN(proposedVal)) {
+        if (op === '>=') {
+          isPassing = proposedVal >= requiredVal;
+          if (!isPassing && proposedVal >= requiredVal * 0.95) isBorderline = true;
+        } else if (op === '<=') {
+          isPassing = proposedVal <= requiredVal;
+          if (!isPassing && proposedVal <= requiredVal * 1.05) isBorderline = true;
+        } else if (op === '==') {
+          isPassing = proposedVal === requiredVal;
+        }
+      } else if (typeof p.requiredValue === 'string') {
+        const reqStr = String(p.requiredValue).toLowerCase().trim();
+        const propStr = String(p.proposedValue || '').toLowerCase().trim();
+        isPassing = propStr.includes(reqStr) || propStr === 'yes' || propStr === 'valid' || propStr === 'active';
+        if (!isPassing && (propStr.includes('pending') || propStr.includes('renewal') || propStr.includes('provisional'))) {
+          isBorderline = true;
+        }
+      }
+
+      return {
+        clauseNumber: p.clauseNumber || 'General',
+        parameterName: p.parameterName,
+        requiredValue: p.requiredValue,
+        proposedValue: p.proposedValue,
+        unit: p.unit || '',
+        status: isPassing ? 'PASS' : (isBorderline ? 'BORDERLINE' : 'FAIL')
+      };
+    });
+
+    const hasFailures = evaluatedParams.some(p => p.status === 'FAIL');
+    const hasBorderline = evaluatedParams.some(p => p.status === 'BORDERLINE');
+
+    let overallStatus = 'COMPLIANT';
+    let summary = 'Meets all required standards & criteria';
+    let badgeColor = 'green';
+
+    if (hasFailures) {
+      overallStatus = 'POTENTIAL NON-COMPLIANCE';
+      summary = 'Does not meet one or more required criteria';
+      badgeColor = 'red';
+    } else if (hasBorderline) {
+      overallStatus = 'VERIFY';
+      summary = 'Some parameters need clarification / more evidence';
+      badgeColor = 'yellow';
+    }
+
+    res.json({
+      isNumber,
+      materialName: materialName || 'Procured Material',
+      overallStatus,
+      summary,
+      badgeColor,
+      evaluatedParameters: evaluatedParams,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Compliance screening error:', err);
+    res.status(500).json({ error: 'Server error during compliance screening' });
+  }
+});
+
 
 // Helper for extracting text from PDF using pdf-parse v2 API
 async function extractTextFromPdf(buffer) {
@@ -397,9 +801,10 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       // matchType: 'exact' — no synthetic similarity score attached
       matchedStd.matchType = 'exact';
 
-      // Fetch related standards in the same category (excluding self)
+      // Fetch related standards in the same category (excluding self and demo records)
       const related = await Standard.find({
         category: matchedStd.category,
+        isDemo: { $ne: true },
         _id: { $ne: matchedStd._id }
       }).limit(4).select('-embedding').lean();
 
@@ -411,10 +816,83 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       return res.status(503).json({ error: 'AI model is still loading, please try again in a few seconds.' });
     }
 
-    const output = await extractor(query, { pooling: 'mean', normalize: true });
+    // Multilingual support: Translate Indic / non-ASCII queries into English technical terms for higher cross-lingual accuracy
+    let effectiveQuery = query;
+    if (/[^\u0000-\u007F]/.test(query)) {
+      let translated = false;
+      const model = getGeminiModel();
+      if (model) {
+        try {
+          const transPromise = model.generateContent(`Translate this Indian procurement or engineering query into concise English technical terms for search: "${query}". Output ONLY the English translation, no other text.`);
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Translation timeout')), 2500));
+          const transResult = await Promise.race([transPromise, timeoutPromise]);
+          const transText = transResult.response.text().trim().replace(/^["']|["']$/g, '');
+          if (transText && !/[^\u0000-\u007F]/.test(transText)) {
+            effectiveQuery = transText;
+            translated = true;
+          }
+        } catch (e) {
+          console.warn('Multilingual query translation fallback:', e.message);
+        }
+      }
+
+      // Offline dictionary fallback for common Indic procurement keywords
+      if (!translated) {
+        const indicTerms = {
+          'पोर्टलैंड सीमेंट': 'Portland cement',
+          'सीमेंट': 'cement',
+          'कंक्रीट': 'concrete',
+          'निर्माण': 'construction',
+          'इस्पात': 'steel',
+          'स्टील': 'steel',
+          'सरिया': 'tmt rebar steel',
+          'पाइप': 'pipe',
+          'नल': 'pipe',
+          'तार': 'wire',
+          'केबल': 'cable',
+          'ईंट': 'brick',
+          'रेत': 'sand',
+          'बालू': 'sand',
+          'बजरी': 'aggregate gravel',
+          'पुल': 'bridge',
+          'सड़क': 'road highway',
+          'बिटुमेन': 'bitumen asphalt',
+          'डामर': 'bitumen asphalt',
+          'पेंट': 'paint coating',
+          'रंग': 'paint',
+          'कांच': 'glass',
+          'लकड़ी': 'timber wood',
+          'इमारती लकड़ी': 'timber wood',
+          'ट्रांसफार्मर': 'transformer',
+          'मोटर': 'motor',
+          'वाल्व': 'valve',
+          'जल': 'water',
+          'पानी': 'water supply',
+          'सुरक्षा': 'safety protective',
+          'हेलमेट': 'industrial safety helmet',
+          'जूते': 'safety footwear shoes',
+          'दस्ताने': 'safety gloves',
+          'बिजली': 'electrical power',
+          'सौर': 'solar photovoltaic',
+          'पंप': 'water pump',
+          'अग्निशामक': 'fire extinguisher'
+        };
+        let mapped = query;
+        for (const [hi, en] of Object.entries(indicTerms)) {
+          mapped = mapped.replaceAll(hi, en);
+        }
+        const cleaned = mapped.replace(/[^\x00-\x7F]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (cleaned.length > 0) {
+          effectiveQuery = cleaned;
+        }
+      }
+    }
+
+    const output = await extractor(effectiveQuery, { pooling: 'mean', normalize: true });
     const queryEmbedding = Array.from(output.data);
 
-    const allStandards = await Standard.find();
+
+    const allStandards = await Standard.find({ isDemo: { $ne: true } });
     const ranked = allStandards.map(std => {
       const score = cosineSimilarity(queryEmbedding, std.embedding);
       return { ...std.toObject(), similarityScore: score };
@@ -506,6 +984,32 @@ app.get('/api/standards', async (req, res) => {
   }
 });
 
+// 3b. GET /api/suggestions?q=... — Fast autocomplete for search box
+app.get('/api/suggestions', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q || q.length < 2) return res.json([]);
+
+    const safe = escapeRegex(q);
+    const results = await Standard.find({
+      isDemo: false,
+      $or: [
+        { isNumber: { $regex: safe, $options: 'i' } },
+        { title: { $regex: safe, $options: 'i' } },
+        { category: { $regex: safe, $options: 'i' } },
+        { scope: { $regex: safe, $options: 'i' } }
+      ]
+    })
+      .select('isNumber title category')
+      .limit(6)
+      .lean();
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Suggestions error' });
+  }
+});
+
 // 4. POST /api/standards (Protected: Admin Only, Cold-Start Guarded)
 app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
@@ -520,6 +1024,8 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       certifications,
       sourceUrl,
       verifiedDate,
+      publishedOn,
+      latestReviewedYear,
       clauses,
       status
     } = req.body;
@@ -562,6 +1068,22 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       }
     }
 
+    let cleanPublishedOn = null;
+    if (publishedOn) {
+      const parsedPubDate = new Date(publishedOn);
+      if (!isNaN(parsedPubDate.getTime())) {
+        cleanPublishedOn = parsedPubDate;
+      }
+    }
+
+    let cleanLatestReviewedYear = null;
+    if (latestReviewedYear) {
+      const parsedYear = parseInt(latestReviewedYear, 10);
+      if (!isNaN(parsedYear) && parsedYear > 1900 && parsedYear < 2100) {
+        cleanLatestReviewedYear = parsedYear;
+      }
+    }
+
     const standardDoc = {
       isNumber: isNumber.trim(),
       title: title.trim(),
@@ -573,6 +1095,8 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       certifications: Array.isArray(certifications) ? certifications : [],
       sourceUrl: cleanSourceUrl,
       verifiedDate: cleanVerifiedDate,
+      publishedOn: cleanPublishedOn,
+      latestReviewedYear: cleanLatestReviewedYear,
       embedding
     };
 
@@ -628,6 +1152,8 @@ app.put('/api/standards/:id', authenticateToken, requireRole('admin'), async (re
       certifications,
       sourceUrl,
       verifiedDate,
+      publishedOn,
+      latestReviewedYear,
       clauses,
       status
     } = req.body;
@@ -672,6 +1198,18 @@ app.put('/api/standards/:id', authenticateToken, requireRole('admin'), async (re
       } else {
         std.verifiedDate = null;
       }
+    }
+    if (publishedOn !== undefined) {
+      if (publishedOn) {
+        const parsed = new Date(publishedOn);
+        std.publishedOn = !isNaN(parsed.getTime()) ? parsed : null;
+      } else {
+        std.publishedOn = null;
+      }
+    }
+    if (latestReviewedYear !== undefined) {
+      const parsedYear = parseInt(latestReviewedYear, 10);
+      std.latestReviewedYear = (!isNaN(parsedYear) && parsedYear > 1900 && parsedYear < 2100) ? parsedYear : null;
     }
     if (clauses !== undefined && Array.isArray(clauses)) {
       std.clauses = clauses.map(c => ({
@@ -810,6 +1348,43 @@ app.get('/api/history', authenticateToken, async (req, res) => {
     res.json(history);
   } catch (err) {
     res.status(500).json({ error: 'Server error fetching history' });
+  }
+});
+
+// 6b. GET /api/admin/stats — Admin dashboard statistics
+app.get('/api/admin/stats', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const [totalStandards, totalUsers, totalSearches, recentSearches, categoryBreakdown] = await Promise.all([
+      Standard.countDocuments(),
+      User.countDocuments(),
+      History.countDocuments(),
+      // Top 5 most searched queries
+      History.aggregate([
+        { $group: { _id: '$query', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+        { $project: { query: '$_id', count: 1, _id: 0 } }
+      ]),
+      // Standards count by category
+      Standard.aggregate([
+        { $match: { isDemo: false } },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 8 }
+      ])
+    ]);
+
+    res.json({
+      totalStandards,
+      realStandards: await Standard.countDocuments({ isDemo: false }),
+      totalUsers,
+      totalSearches,
+      topQueries: recentSearches,
+      categoryBreakdown: categoryBreakdown.map(c => ({ category: c._id, count: c.count }))
+    });
+  } catch (err) {
+    console.error('Admin stats error:', err);
+    res.status(500).json({ error: 'Failed to load stats' });
   }
 });
 

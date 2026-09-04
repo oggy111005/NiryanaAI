@@ -1,12 +1,71 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
+import api, { getCleanBisUrl } from '../api';
+import { ArrowLeft, CheckCircle, Shield, FileText, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen, Copy, Check } from 'lucide-react';
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy}
+      title="Copy IS Number"
+      className="ml-2 p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center shadow-sm"
+    >
+      {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+    </button>
+  );
+};
+
+const ConfidenceMeter = ({ score, showLabel = true }) => {
+  const percent = (score * 100).toFixed(0);
+  let colorClass = 'text-yellow-700';
+  let barClass = 'bg-yellow-400';
+  let label = 'Low Confidence';
+  
+  if (score >= 0.75) {
+    colorClass = 'text-green-700';
+    barClass = 'bg-green-500';
+    label = 'High Confidence';
+  } else if (score >= 0.50) {
+    colorClass = 'text-blue-700';
+    barClass = 'bg-blue-500';
+    label = 'Moderate Match';
+  }
+
+  return (
+    <div className="flex flex-col gap-1 w-24 shrink-0 ml-auto">
+      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+        <span className={colorClass}>{showLabel ? label : 'Match'}</span>
+        <span className={colorClass}>{percent}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className={`h-full ${barClass} transition-all duration-1000 ease-out`} 
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   const { results, query } = location.state || {};
+
+  // --- Explainability state (must be declared at top level) ---
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [explanation, setExplanation] = useState('');
+  const [citations, setCitations] = useState([]);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState('');
 
   if (!results) {
     return (
@@ -19,20 +78,13 @@ export default function Results() {
 
   const { primary, related } = results;
 
-  // --- Explainability state ---
-  const [explainOpen, setExplainOpen] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [citations, setCitations] = useState([]);
-  const [explainLoading, setExplainLoading] = useState(false);
-  const [explainError, setExplainError] = useState('');
-
   const fetchExplanation = async () => {
     if (explanation) { setExplainOpen(o => !o); return; } // already fetched
     setExplainOpen(true);
     setExplainLoading(true);
     setExplainError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/explain', {
+      const res = await api.post('/api/explain', {
         standardId: primary._id,
         userQuery: query
       });
@@ -42,15 +94,6 @@ export default function Results() {
       setExplainError('Could not load explanation. Please try again.');
     } finally {
       setExplainLoading(false);
-    }
-  };
-
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'Safety': return <Shield size={16} className="text-red-500" />;
-      case 'Test Method': return <Settings size={16} className="text-blue-500" />;
-      case 'Related Product': return <Layers size={16} className="text-green-500" />;
-      default: return <FileText size={16} className="text-gray-500" />;
     }
   };
 
@@ -76,16 +119,31 @@ export default function Results() {
           
           <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4 pt-2">
             <div>
-              <h2 className={`text-3xl font-bold ${primary.matchType ? 'text-green-700' : 'text-primary'}`}>{primary.isNumber}</h2>
+              <h2 className={`text-3xl font-bold flex items-center ${primary.matchType ? 'text-green-700' : 'text-primary'}`}>
+                {primary.isNumber}
+                <CopyButton text={primary.isNumber} />
+              </h2>
               <h3 className="text-xl text-gray-800 font-medium mt-1">{primary.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-200">
                 Category: {primary.category}
               </span>
-              <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">
-                Latest: {primary.latestVersion || 'N/A'}
-              </span>
+              {primary.publishedOn && (
+                <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-200">
+                  Published: {new Date(primary.publishedOn).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              )}
+              {primary.latestReviewedYear && (
+                <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-indigo-200">
+                  Reviewed: {primary.latestReviewedYear}
+                </span>
+              )}
+              {primary.amendments && primary.amendments.length > 0 && (
+                <span className="bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-amber-200">
+                  {primary.amendments.length} {primary.amendments.length === 1 ? 'Amendment' : 'Amendments'}
+                </span>
+              )}
               {primary.verifiedDate && (
                 <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
                   <CheckCircle size={12} /> Verified: {new Date(primary.verifiedDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -204,7 +262,7 @@ export default function Results() {
                                 </div>
                                 {cit.sourceUrl && (
                                   <a
-                                    href={cit.sourceUrl}
+                                    href={getCleanBisUrl(cit.sourceUrl, cit.clauseId || primary.isNumber)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-primary hover:text-blue-800 font-semibold hover:underline text-xs"
@@ -262,9 +320,10 @@ export default function Results() {
             <ul className="space-y-3">
               {primary.alliedStandards.map((allied, idx) => (
                 <li key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 rounded shadow-sm border border-gray-100">
-                  <div>
-                    <span className="font-bold text-primary mr-2">{allied.isNumber}</span>
-                    <span className="text-gray-700 text-sm">{allied.title}</span>
+                  <div className="flex items-center">
+                    <span className="font-bold text-primary">{allied.isNumber}</span>
+                    <CopyButton text={allied.isNumber} />
+                    <span className="text-gray-700 text-sm ml-3 border-l border-gray-200 pl-3">{allied.title}</span>
                   </div>
                   {allied.type && (
                     <span className="mt-2 sm:mt-0 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
@@ -287,19 +346,20 @@ export default function Results() {
             {related.map((std, idx) => (
               <div key={idx} className="bg-white p-4 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-2">
-                  <Link to={`/standard/${std._id}`} className="text-lg font-semibold text-primary hover:underline">
-                    {std.isNumber}
-                  </Link>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {(std.similarityScore * 100).toFixed(0)}% match
-                  </span>
+                  <div className="flex items-center">
+                    <Link to={`/standard/${std._id}`} className="text-lg font-semibold text-primary hover:underline">
+                      {std.isNumber}
+                    </Link>
+                    <CopyButton text={std.isNumber} />
+                  </div>
+                  <ConfidenceMeter score={std.similarityScore} showLabel={false} />
                 </div>
                 <p className="text-sm text-gray-800 font-medium mb-2 truncate" title={std.title}>{std.title}</p>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
                   <span>Category: {std.category}</span>
                   {std.sourceUrl && (
                     <a
-                      href={std.sourceUrl}
+                      href={getCleanBisUrl(std.sourceUrl, std.isNumber)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-secondary hover:underline inline-flex items-center gap-1 font-medium"
