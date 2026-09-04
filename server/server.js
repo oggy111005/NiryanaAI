@@ -1000,6 +1000,43 @@ app.get('/api/history', authenticateToken, async (req, res) => {
   }
 });
 
+// 6b. GET /api/admin/stats — Admin dashboard statistics
+app.get('/api/admin/stats', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const [totalStandards, totalUsers, totalSearches, recentSearches, categoryBreakdown] = await Promise.all([
+      Standard.countDocuments(),
+      User.countDocuments(),
+      History.countDocuments(),
+      // Top 5 most searched queries
+      History.aggregate([
+        { $group: { _id: '$query', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+        { $project: { query: '$_id', count: 1, _id: 0 } }
+      ]),
+      // Standards count by category
+      Standard.aggregate([
+        { $match: { isDemo: false } },
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 8 }
+      ])
+    ]);
+
+    res.json({
+      totalStandards,
+      realStandards: await Standard.countDocuments({ isDemo: false }),
+      totalUsers,
+      totalSearches,
+      topQueries: recentSearches,
+      categoryBreakdown: categoryBreakdown.map(c => ({ category: c._id, count: c.count }))
+    });
+  } catch (err) {
+    console.error('Admin stats error:', err);
+    res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
 // Return only explicitly stored clauses. Never manufacture clause text or links.
 function getStandardClauses(standard) {
   if (!standard.isDemo && standard.clauses && Array.isArray(standard.clauses) && standard.clauses.length > 0) {
