@@ -1,7 +1,7 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Search, Database as DatabaseIcon, Loader2, ExternalLink, Filter } from 'lucide-react';
+import { Search, Database as DatabaseIcon, Loader2, ExternalLink, Filter, CheckCircle } from 'lucide-react';
 
 export default function Database() {
   const [standards, setStandards] = useState([]);
@@ -137,6 +137,12 @@ export default function Database() {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Version
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Verified Date
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Source
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Details
                   </th>
@@ -160,6 +166,35 @@ export default function Database() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {std.latestVersion || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                      {std.verifiedDate ? (
+                        <span className="inline-flex items-center gap-1 text-green-700 font-medium">
+                          <CheckCircle size={12} className="text-green-600" />
+                          {new Date(std.verifiedDate).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic">Unverified</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                      {std.sourceUrl ? (
+                        <a
+                          href={std.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-secondary hover:text-teal-800 text-xs font-semibold inline-flex items-center gap-1 bg-teal-50 border border-teal-200 px-2 py-1 rounded hover:bg-teal-100 transition-colors"
+                          title="Open official BIS document"
+                        >
+                          <ExternalLink size={12} /> BIS
+                        </a>
+                      ) : (
+                        <span className="text-gray-300 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <Link

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Loader2, Database as DatabaseIcon } from 'lucide-react';
+import { Loader2, Database as DatabaseIcon, ExternalLink, CheckCircle } from 'lucide-react';
 
 export default function DatabaseView() {
   const [standards, setStandards] = useState([]);
@@ -50,6 +51,8 @@ export default function DatabaseView() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Verified Date</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -57,10 +60,12 @@ export default function DatabaseView() {
                 <tr key={std._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
                     <div className="flex items-center space-x-2">
-                      <span>{std.isNumber}</span>
+                      <Link to={`/standard/${std._id}`} className="hover:underline">
+                        {std.isNumber}
+                      </Link>
                       {std.isDemo && (
                         <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-300">
-                          DEMO
+                          DEMO DATA
                         </span>
                       )}
                     </div>
@@ -79,6 +84,35 @@ export default function DatabaseView() {
                       {std.status || 'active'}
                     </span>
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
+                    {std.verifiedDate ? (
+                      <span className="inline-flex items-center gap-1 text-green-700 font-medium">
+                        <CheckCircle size={12} className="text-green-600" />
+                        {new Date(std.verifiedDate).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">Unverified</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                    {std.sourceUrl ? (
+                      <a
+                        href={std.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-secondary hover:text-teal-800 inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 bg-teal-50 rounded border border-teal-200 hover:bg-teal-100 transition-colors"
+                        title="Open official BIS standard"
+                      >
+                        <ExternalLink size={12} /> BIS
+                      </a>
+                    ) : (
+                      <span className="text-gray-300 text-xs">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -88,4 +122,3 @@ export default function DatabaseView() {
     </div>
   );
 }
-

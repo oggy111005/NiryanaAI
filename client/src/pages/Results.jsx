@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search, Lightbulb, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield, FileText, Settings, Layers, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
 
 export default function Results() {
   const location = useLocation();
@@ -22,6 +22,7 @@ export default function Results() {
   // --- Explainability state ---
   const [explainOpen, setExplainOpen] = useState(false);
   const [explanation, setExplanation] = useState('');
+  const [citations, setCitations] = useState([]);
   const [explainLoading, setExplainLoading] = useState(false);
   const [explainError, setExplainError] = useState('');
 
@@ -36,6 +37,7 @@ export default function Results() {
         userQuery: query
       });
       setExplanation(res.data.explanation);
+      setCitations(res.data.citations || []);
     } catch {
       setExplainError('Could not load explanation. Please try again.');
     } finally {
@@ -84,6 +86,22 @@ export default function Results() {
               <span className="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">
                 Latest: {primary.latestVersion || 'N/A'}
               </span>
+              {primary.verifiedDate && (
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+                  <CheckCircle size={12} /> Verified: {new Date(primary.verifiedDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              )}
+              {primary.sourceUrl && (
+                <a
+                  href={primary.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-teal-50 hover:bg-teal-100 text-secondary border border-teal-200 text-xs font-semibold px-2.5 py-0.5 rounded flex items-center gap-1 transition-colors"
+                  title="View official BIS Standard document"
+                >
+                  <ExternalLink size={12} /> Official BIS Source
+                </a>
+              )}
             </div>
           </div>
           
@@ -154,12 +172,61 @@ export default function Results() {
                 ) : explainError ? (
                   <div className="text-red-600 text-xs">{explainError}</div>
                 ) : (
-                  <div>
-                    <div className="font-semibold text-amber-900 mb-1 flex items-center">
-                      <Shield size={14} className="mr-1.5 text-amber-700" />
-                      Procurement Compliance Rationale:
+                  <div className="space-y-4">
+                    <div>
+                      <div className="font-semibold text-amber-900 mb-1 flex items-center">
+                        <Shield size={14} className="mr-1.5 text-amber-700" />
+                        Procurement Compliance Rationale:
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{explanation}</p>
                     </div>
-                    <p className="text-gray-700">{explanation}</p>
+
+                    {citations && citations.length > 0 && (
+                      <div className="pt-3 border-t border-amber-200/70">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 flex items-center">
+                            <BookOpen size={14} className="mr-1.5 text-amber-700" />
+                            Clause-by-Clause Citations
+                          </h4>
+                          <span className="text-xs font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                            {citations.length} verified {citations.length === 1 ? 'clause' : 'clauses'}
+                          </span>
+                        </div>
+                        <div className="space-y-2.5">
+                          {citations.map((cit, idx) => (
+                            <div key={idx} className="bg-white p-3.5 rounded-md border border-amber-200 shadow-sm text-xs">
+                              <div className="flex items-start justify-between gap-2 mb-1.5 flex-wrap">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                                    {cit.clauseId ? `Clause ${cit.clauseId}` : cit.clauseNumber ? `Clause ${cit.clauseNumber}` : 'Clause'}
+                                  </span>
+                                  <span className="font-semibold text-gray-900 text-xs">{cit.title}</span>
+                                </div>
+                                {cit.sourceUrl && (
+                                  <a
+                                    href={cit.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-primary hover:text-blue-800 font-semibold hover:underline text-xs"
+                                  >
+                                    <ExternalLink size={12} /> BIS Source
+                                  </a>
+                                )}
+                              </div>
+                              <blockquote className="text-gray-700 italic pl-2.5 border-l-2 border-amber-400 my-2 leading-normal bg-amber-50/40 py-1 rounded-r">
+                                "{cit.text}"
+                              </blockquote>
+                              {cit.relevance && (
+                                <div className="text-gray-600 mt-1 flex items-start gap-1">
+                                  <span className="font-semibold text-amber-800 shrink-0">Relevance:</span>
+                                  <span>{cit.relevance}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -228,8 +295,18 @@ export default function Results() {
                   </span>
                 </div>
                 <p className="text-sm text-gray-800 font-medium mb-2 truncate" title={std.title}>{std.title}</p>
-                <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-                  <span className="text-xs text-gray-500">Category: {std.category}</span>
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                  <span>Category: {std.category}</span>
+                  {std.sourceUrl && (
+                    <a
+                      href={std.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-secondary hover:underline inline-flex items-center gap-1 font-medium"
+                    >
+                      <ExternalLink size={12} /> Source
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

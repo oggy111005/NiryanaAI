@@ -40,10 +40,18 @@ const standardSchema = new mongoose.Schema({
   verifiedDate: {
     type: Date,
     default: null
-  }
+  },
+  clauses: [
+    {
+      clauseNumber: { type: String, required: true },
+      title: { type: String, required: true },
+      text: { type: String, required: true },
+      sourceUrl: { type: String, default: null }
+    }
+  ]
 });
 
-// Middleware to normalize IS Number and set provenance before Validation
+// Middleware to normalize IS Number and enforce demo-data provenance rules.
 standardSchema.pre('validate', function() {
   if (this.isModified('isNumber') && this.isNumber) {
     this.normalizedIsNumber = this.isNumber.toLowerCase().replace(/\s+/g, '');
@@ -55,10 +63,15 @@ standardSchema.pre('validate', function() {
       this.status = 'draft';
     }
     this.sourceUrl = null;
+    this.verifiedDate = null;
+    if (this.clauses && Array.isArray(this.clauses)) {
+      this.clauses.forEach(c => { c.sourceUrl = null; });
+    }
   } else {
     if (this.isDemo === undefined) this.isDemo = false;
     if (!this.status) this.status = 'active';
   }
+
 });
 
 // Middleware to normalize IS Number and set provenance on Upsert/Update
@@ -82,6 +95,10 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
         update.$setOnInsert.isDemo = true;
         update.$setOnInsert.status = 'draft';
         update.$setOnInsert.sourceUrl = null;
+        update.$setOnInsert.verifiedDate = null;
+        if (update.$setOnInsert.clauses && Array.isArray(update.$setOnInsert.clauses)) {
+          update.$setOnInsert.clauses.forEach(c => { c.sourceUrl = null; });
+        }
       } else {
         if (update.$setOnInsert.isDemo === undefined) update.$setOnInsert.isDemo = false;
         if (!update.$setOnInsert.status) update.$setOnInsert.status = 'active';
@@ -94,10 +111,10 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
         update.$set.isDemo = true;
         update.$set.status = 'draft';
         update.$set.sourceUrl = null;
+        update.$set.verifiedDate = null;
       }
     }
   }
 });
 
 module.exports = mongoose.model('Standard', standardSchema);
-

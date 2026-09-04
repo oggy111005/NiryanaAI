@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const Standard = require('./models/Standard');
 
 function sanitizeUri(uri) {
@@ -99,7 +99,10 @@ async function auditAndMigrateStandards(options = {}) {
         if (!rawDoc.baseIsNumber) updateOps.baseIsNumber = item.base;
         if (rawDoc.isDemo === undefined) updateOps.isDemo = item.isDemo;
         if (!rawDoc.status) updateOps.status = item.status;
-        if (item.isDemo && rawDoc.sourceUrl) updateOps.sourceUrl = null;
+        if (item.isDemo) {
+          if (rawDoc.sourceUrl) updateOps.sourceUrl = null;
+          if (rawDoc.verifiedDate) updateOps.verifiedDate = null;
+        }
 
         if (Object.keys(updateOps).length > 0) {
           await mongoose.connection.db.collection('standards').updateOne(

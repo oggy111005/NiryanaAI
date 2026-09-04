@@ -9,6 +9,8 @@ export default function Admin() {
     category: '',
     scope: '',
     latestVersion: '',
+    sourceUrl: '',
+    verifiedDate: '',
   });
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
@@ -43,7 +45,9 @@ export default function Admin() {
         title: extracted.title || prev.title,
         category: extracted.category || prev.category,
         scope: extracted.scope || prev.scope,
-        latestVersion: extracted.latestVersion || prev.latestVersion
+        latestVersion: extracted.latestVersion || prev.latestVersion,
+        sourceUrl: extracted.sourceUrl || prev.sourceUrl,
+        verifiedDate: extracted.verifiedDate || prev.verifiedDate
       }));
       
       setMessage('Details extracted successfully! Please review them before saving.');
@@ -65,7 +69,15 @@ export default function Admin() {
     try {
       await axios.post('http://localhost:5000/api/standards', formData);
       setMessage('Standard added successfully! Embeddings generated.');
-      setFormData({ isNumber: '', title: '', category: '', scope: '', latestVersion: '' });
+      setFormData({
+        isNumber: '',
+        title: '',
+        category: '',
+        scope: '',
+        latestVersion: '',
+        sourceUrl: '',
+        verifiedDate: ''
+      });
     } catch (err) {
       setMessage('Error adding standard.');
       console.error(err);
@@ -90,7 +102,7 @@ export default function Admin() {
       {/* Auto-fill from file section */}
       <div className="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Auto-fill from Document</h3>
-        <p className="text-sm text-gray-600 mb-4">Upload a PDF or text file of the standard to automatically extract details like IS Number, Title, and Scope.</p>
+        <p className="text-sm text-gray-600 mb-4">Upload a PDF or text file of the standard to automatically extract details like IS Number, Title, Scope, Source URL, and Verified Date.</p>
         
         <input 
           type="file" 
@@ -133,6 +145,30 @@ export default function Admin() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Latest Version</label>
             <input type="text" name="latestVersion" value={formData.latestVersion} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Source URL (Official BIS Document)</label>
+            <input
+              type="url"
+              name="sourceUrl"
+              value={formData.sourceUrl}
+              onChange={handleChange}
+              placeholder="https://standardsbis.bsbedge.com/..."
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Verified Date</label>
+            <input
+              type="date"
+              name="verifiedDate"
+              value={formData.verifiedDate}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary text-sm"
+            />
           </div>
         </div>
 

@@ -381,6 +381,19 @@ app.get('/api/standards/:id', async (req, res) => {
 });
 
 // --- HELPER FUNCTIONS ---
+function isOfficialBisUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && (
+      url.hostname === 'standardsbis.bsbedge.com' ||
+      url.hostname === 'bis.gov.in' ||
+      url.hostname.endsWith('.bis.gov.in')
+    );
+  } catch {
+    return false;
+  }
+}
+
 function escapeRegex(text) {
   // Prevent ReDoS and Regex Injection by escaping special characters
   return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -413,7 +426,20 @@ app.get('/api/standards', async (req, res) => {
 // 4. POST /api/standards (Protected: Admin Only, Cold-Start Guarded)
 app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
-    const { isNumber, title, category, scope, latestVersion, amendments, alliedStandards, certifications } = req.body;
+    const {
+      isNumber,
+      title,
+      category,
+      scope,
+      latestVersion,
+      amendments,
+      alliedStandards,
+      certifications,
+      sourceUrl,
+      verifiedDate,
+      clauses,
+      status
+    } = req.body;
 
     if (!isNumber || typeof isNumber !== 'string' || !isNumber.trim()) {
       return res.status(400).json({ error: 'Valid isNumber is required' });
@@ -423,6 +449,12 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
     }
     if (!scope || !scope.trim()) {
       return res.status(400).json({ error: 'Scope is required' });
+    }
+    if (sourceUrl && (typeof sourceUrl !== 'string' || !isOfficialBisUrl(sourceUrl.trim()))) {
+      return res.status(400).json({ error: 'sourceUrl must be an HTTPS URL from an official BIS domain' });
+    }
+    if (verifiedDate && Number.isNaN(new Date(verifiedDate).getTime())) {
+      return res.status(400).json({ error: 'verifiedDate must be a valid date' });
     }
 
     // Cold-start guard: never save standard with empty embedding
@@ -434,7 +466,20 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
     const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
     const embedding = Array.from(output.data);
 
-    const newStd = new Standard({
+    let cleanSourceUrl = null;
+    if (sourceUrl && typeof sourceUrl === 'string' && sourceUrl.trim()) {
+      cleanSourceUrl = sourceUrl.trim();
+    }
+
+    let cleanVerifiedDate = null;
+    if (verifiedDate) {
+      const parsedDate = new Date(verifiedDate);
+      if (!isNaN(parsedDate.getTime())) {
+        cleanVerifiedDate = parsedDate;
+      }
+    }
+
+    const standardDoc = {
       isNumber: isNumber.trim(),
       title: title.trim(),
       category: category ? category.trim() : 'General',
@@ -443,8 +488,25 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
       amendments: Array.isArray(amendments) ? amendments : [],
       alliedStandards: Array.isArray(alliedStandards) ? alliedStandards : [],
       certifications: Array.isArray(certifications) ? certifications : [],
+      sourceUrl: cleanSourceUrl,
+      verifiedDate: cleanVerifiedDate,
       embedding
-    });
+    };
+
+    if (clauses && Array.isArray(clauses) && clauses.length > 0) {
+      standardDoc.clauses = clauses.map(c => ({
+        clauseNumber: String(c.clauseNumber || '').trim(),
+        title: String(c.title || '').trim(),
+        text: String(c.text || '').trim(),
+        sourceUrl: c.sourceUrl ? String(c.sourceUrl).trim() : null
+      })).filter(c => c.clauseNumber && c.title && c.text);
+    }
+
+    if (status && ['draft', 'active', 'superseded', 'withdrawn'].includes(status)) {
+      standardDoc.status = status;
+    }
+
+    const newStd = new Standard(standardDoc);
 
     await newStd.save();
 
@@ -460,6 +522,106 @@ app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, 
     }
     console.error('Error creating standard:', err);
     res.status(500).json({ error: 'Server error creating standard' });
+  }
+});
+
+// 4b. PUT /api/standards/:id (Protected: Admin Only)
+app.put('/api/standards/:id', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const std = await Standard.findById(id);
+    if (!std) {
+      return res.status(404).json({ error: 'Standard not found' });
+    }
+
+    const {
+      isNumber,
+      title,
+      category,
+      scope,
+      latestVersion,
+      amendments,
+      alliedStandards,
+      certifications,
+      sourceUrl,
+      verifiedDate,
+      clauses,
+      status
+    } = req.body;
+
+    if (isNumber !== undefined && typeof isNumber === 'string' && isNumber.trim()) {
+      std.isNumber = isNumber.trim();
+    }
+    if (title !== undefined && typeof title === 'string' && title.trim()) {
+      std.title = title.trim();
+    }
+    if (category !== undefined) {
+      std.category = category ? category.trim() : 'General';
+    }
+    if (scope !== undefined && typeof scope === 'string' && scope.trim()) {
+      std.scope = scope.trim();
+    }
+    if (latestVersion !== undefined) {
+      std.latestVersion = latestVersion ? latestVersion.trim() : '';
+    }
+    if (amendments !== undefined && Array.isArray(amendments)) {
+      std.amendments = amendments;
+    }
+    if (alliedStandards !== undefined && Array.isArray(alliedStandards)) {
+      std.alliedStandards = alliedStandards;
+    }
+    if (certifications !== undefined && Array.isArray(certifications)) {
+      std.certifications = certifications;
+    }
+    if (sourceUrl !== undefined) {
+      if (sourceUrl && (typeof sourceUrl !== 'string' || !isOfficialBisUrl(sourceUrl.trim()))) {
+        return res.status(400).json({ error: 'sourceUrl must be an HTTPS URL from an official BIS domain' });
+      }
+      std.sourceUrl = sourceUrl && typeof sourceUrl === 'string' && sourceUrl.trim() ? sourceUrl.trim() : null;
+    }
+    if (verifiedDate !== undefined) {
+      if (verifiedDate) {
+        const parsed = new Date(verifiedDate);
+        if (Number.isNaN(parsed.getTime())) {
+          return res.status(400).json({ error: 'verifiedDate must be a valid date' });
+        }
+        std.verifiedDate = !isNaN(parsed.getTime()) ? parsed : null;
+      } else {
+        std.verifiedDate = null;
+      }
+    }
+    if (clauses !== undefined && Array.isArray(clauses)) {
+      std.clauses = clauses.map(c => ({
+        clauseNumber: String(c.clauseNumber || '').trim(),
+        title: String(c.title || '').trim(),
+        text: String(c.text || '').trim(),
+        sourceUrl: c.sourceUrl ? String(c.sourceUrl).trim() : null
+      })).filter(c => c.clauseNumber && c.title && c.text);
+    }
+    if (status !== undefined && ['draft', 'active', 'superseded', 'withdrawn'].includes(status)) {
+      std.status = status;
+    }
+
+    if (extractor && (req.body.title || req.body.scope || req.body.category)) {
+      const textToEmbed = `${std.title}. ${std.scope} ${std.category || ''}`.trim();
+      const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
+      std.embedding = Array.from(output.data);
+    }
+
+    await std.save();
+
+    const returnedStd = std.toObject();
+    delete returnedStd.embedding;
+    res.json(returnedStd);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: 'Duplicate Standard',
+        message: 'A standard with this IS Number already exists.'
+      });
+    }
+    console.error('Error updating standard:', err);
+    res.status(500).json({ error: 'Server error updating standard' });
   }
 });
 
@@ -536,12 +698,20 @@ app.post('/api/extract-standard', authenticateToken, requireRole('admin'), (req,
     const yearMatch = isNumber.match(/:(\d{4})/);
     if (yearMatch) latestVersion = yearMatch[1];
 
+    let sourceUrl = '';
+    const urlMatch = text.match(/https?:\/\/[^\s]+/i);
+    if (urlMatch && isOfficialBisUrl(urlMatch[0])) {
+      sourceUrl = urlMatch[0];
+    }
+
     res.json({
       isNumber,
       title,
       category,
       scope,
-      latestVersion
+      latestVersion,
+      sourceUrl,
+      verifiedDate: ''
     });
   } catch (err) {
     console.error('Extraction error:', err);
@@ -573,6 +743,40 @@ app.get('/api/history', authenticateToken, async (req, res) => {
 // When no Gemini API key is set:
 //   - Returns a deterministic template-based explanation built from scope
 //   - UI never shows a broken state
+// Return only explicitly stored clauses. Never manufacture clause text or links.
+function getStandardClauses(standard) {
+  if (!standard.isDemo && standard.clauses && Array.isArray(standard.clauses) && standard.clauses.length > 0) {
+    return standard.clauses;
+  }
+  return [];
+}
+
+// Helper to deterministically rank and format structured citations for a query
+function rankAndFormatCitations(effectiveClauses, userQuery, standard) {
+  const queryTokens = userQuery.toLowerCase().split(/\W+/).filter(w => w.length > 2);
+  const scored = effectiveClauses.map(clause => {
+    let score = 0;
+    const clauseText = `${clause.title} ${clause.text}`.toLowerCase();
+    for (const token of queryTokens) {
+      if (clauseText.includes(token)) score += 2;
+    }
+    return { clause, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const selected = scored.slice(0, Math.min(3, scored.length)).map(item => item.clause);
+
+  return selected.map(c => ({
+    clauseId: `Clause ${c.clauseNumber}`,
+    clauseNumber: c.clauseNumber,
+    title: c.title,
+    text: c.text,
+    sourceUrl: c.sourceUrl || null,
+    relevance: `Directly specifies ${c.title.toLowerCase()} relevant to "${userQuery.trim()}".`
+  }));
+}
+
+// 7. POST /api/explain — Recommendation Explainability with Clause-by-Clause Citations
 app.post('/api/explain', async (req, res) => {
   try {
     const { standardId, userQuery } = req.body;
@@ -587,12 +791,16 @@ app.post('/api/explain', async (req, res) => {
     }
 
     const { isNumber, title, category, scope, certifications = [], latestVersion } = standard;
+    const effectiveClauses = getStandardClauses(standard);
+    const fallbackCitations = rankAndFormatCitations(effectiveClauses, userQuery, standard);
 
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey) {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+      const clausesContext = effectiveClauses.map(c => `[Clause ${c.clauseNumber}] ${c.title}: ${c.text}`).join('\n');
 
       const prompt = `You are a Bureau of Indian Standards (BIS) compliance assistant helping a procurement officer understand why a specific standard applies to their requirement.
 
@@ -604,29 +812,57 @@ The recommended Indian Standard is:
 - Category: ${category}
 - Scope: ${scope}
 - Required Certifications: ${certifications.length > 0 ? certifications.join(', ') : 'None listed'}
+- Available Standard Clauses:
+${clausesContext}
 
-Write a 3-4 sentence explanation of why this standard is relevant to the officer's search query.
+You must return a valid JSON object with the following structure:
+{
+  "explanation": "A 3-4 sentence plain-English explanation for a procurement officer of why this standard applies. Do not start with 'This standard'.",
+  "citations": [
+    {
+      "clauseId": "Clause 1.1",
+      "clauseNumber": "1.1",
+      "title": "Title of clause",
+      "text": "Exact text or key requirement excerpt from the clause",
+      "relevance": "Concise 1-sentence statement on why this clause governs the query"
+    }
+  ]
+}
+
 Rules:
-1. Only cite information present in the scope text above. Do NOT invent clause numbers or details not in the scope.
-2. Mention the specific aspect of the search query that matches the standard's coverage.
-3. If certifications are listed, briefly note what compliance scheme applies.
-4. Write in plain English suitable for a government procurement officer.
-5. Do not start with "This standard" - vary the opening.`;
+1. Only cite clauses present in the list of available standard clauses above.
+2. Select 1 to 3 of the most relevant clauses matching the query.
+3. Return ONLY valid JSON with no enclosing markdown backticks.`;
 
-      const result = await model.generateContent(prompt);
-      const explanation = result.response.text().trim();
-      return res.json({ explanation, source: 'gemini' });
+      try {
+        const result = await model.generateContent(prompt);
+        const rawText = result.response.text().trim();
+        const cleaned = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+        const parsed = JSON.parse(cleaned);
+
+        if (parsed.explanation) {
+          return res.json({ explanation: parsed.explanation, citations: fallbackCitations, source: 'gemini' });
+        }
+      } catch (geminiErr) {
+        console.warn('Gemini structured response parsing failed, using fallback structured citations:', geminiErr.message);
+      }
     }
 
-    // --- FALLBACK: Template-based explanation (no API key needed) ---
+    // --- FALLBACK: Template-based explanation + structured clause citations ---
     const certNote = certifications.length > 0
       ? ` Compliance requires: ${certifications.join(', ')}.`
       : '';
     const fallback = `${isNumber} — ${title} — is applicable to your query because its scope covers the technical domain you specified. `
       + `Specifically, it governs: "${scope.substring(0, 180).trim()}${scope.length > 180 ? '...' : ''}"${certNote} `
-      + `Configure your Gemini API key in server/.env for a detailed clause-level explanation.`;
+      + (fallbackCitations.length > 0
+        ? ' The cited clauses below are the stored, verified requirements supporting this recommendation.'
+        : ' No verified clause citations are available for this record yet.');
 
-    return res.json({ explanation: fallback, source: 'fallback' });
+    return res.json({
+      explanation: fallback,
+      source: 'fallback',
+      citations: fallbackCitations
+    });
 
   } catch (err) {
     console.error('Explain error:', err);

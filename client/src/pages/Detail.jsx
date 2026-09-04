@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Loader2, Bookmark } from 'lucide-react';
+import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText } from 'lucide-react';
 
 export default function Detail() {
   const { id } = useParams();
@@ -35,7 +35,24 @@ export default function Detail() {
 
       <div className="flex justify-between items-start mb-6 border-b pb-6">
         <div>
-          <h1 className="text-4xl font-bold text-primary mb-2">{standard.isNumber}</h1>
+          <div className="flex items-center gap-3 mb-1 flex-wrap">
+            <h1 className="text-4xl font-bold text-primary">{standard.isNumber}</h1>
+            {standard.status && (
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded border uppercase tracking-wider ${
+                standard.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
+                standard.status === 'draft' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                standard.status === 'superseded' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                'bg-gray-100 text-gray-800 border-gray-200'
+              }`}>
+                {standard.status}
+              </span>
+            )}
+            {standard.isDemo && (
+              <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded border border-amber-300">
+                DEMO DATA
+              </span>
+            )}
+          </div>
           <h2 className="text-2xl text-gray-800 font-medium">{standard.title}</h2>
         </div>
         <button className="p-2 border border-gray-300 rounded hover:bg-gray-50 text-gray-600 transition-colors">
@@ -51,6 +68,46 @@ export default function Detail() {
               {standard.scope}
             </p>
           </section>
+
+          {standard.clauses && standard.clauses.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <FileText size={18} className="mr-2 text-primary" /> Technical Clauses & Specifications
+                </h3>
+                <span className="text-xs font-semibold text-primary bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                  {standard.clauses.length} {standard.clauses.length === 1 ? 'clause' : 'clauses'}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {standard.clauses.map((c, idx) => (
+                  <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded border border-primary/20">
+                          Clause {c.clauseNumber}
+                        </span>
+                        <h4 className="font-semibold text-gray-800 text-sm">{c.title}</h4>
+                      </div>
+                      {c.sourceUrl && (
+                        <a
+                          href={c.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-secondary hover:text-teal-800 hover:underline font-medium"
+                        >
+                          <ExternalLink size={12} /> Source
+                        </a>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed pl-3 border-l-2 border-primary/30">
+                      {c.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section>
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Allied Standards</h3>
@@ -93,7 +150,40 @@ export default function Detail() {
               </div>
               <div>
                 <span className="block text-gray-500">Latest Version</span>
-                <span className="font-medium text-gray-800">{standard.latestVersion}</span>
+                <span className="font-medium text-gray-800">{standard.latestVersion || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="block text-gray-500 mb-1">Verified Date</span>
+                {standard.verifiedDate ? (
+                  <span className="inline-flex items-center gap-1.5 text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded text-xs font-semibold">
+                    <CheckCircle size={13} className="text-green-600" />
+                    {new Date(standard.verifiedDate).toLocaleDateString('en-IN', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded text-xs font-medium">
+                    <AlertCircle size={13} className="text-amber-600" />
+                    Unverified Record
+                  </span>
+                )}
+              </div>
+              <div>
+                <span className="block text-gray-500 mb-1">Official Source</span>
+                {standard.sourceUrl ? (
+                  <a
+                    href={standard.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-secondary hover:text-teal-800 text-xs font-semibold bg-teal-50 border border-teal-200 px-2.5 py-1.5 rounded transition-colors hover:underline"
+                  >
+                    <Globe size={13} /> View BIS Standard <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-xs text-gray-400 italic">No official document URL linked</span>
+                )}
               </div>
               <div>
                 <span className="block text-gray-500">Required Certification</span>
@@ -127,4 +217,3 @@ export default function Detail() {
     </div>
   );
 }
-
