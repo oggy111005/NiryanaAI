@@ -8,6 +8,7 @@ import History from './pages/History';
 import Admin from './pages/Admin';
 import DatabaseView from './pages/DatabaseView';
 import Login from './pages/Login';
+import TenderSimulator from './pages/TenderSimulator';
 import Chatbot from './components/Chatbot';
 import { LogOut, User as UserIcon } from 'lucide-react';
 
