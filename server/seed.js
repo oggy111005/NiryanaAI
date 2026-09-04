@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 const Standard = require('./models/Standard');
+const User = require('./models/User');
 
 // Dynamically import the transformers package
 async function getPipeline() {
@@ -1571,6 +1572,29 @@ async function seed() {
       console.warn(`\n[WARNING] INITIATING FULL DATA PURGE on Database: '${dbName}' @ '${dbHost}'...`);
       await Standard.deleteMany({});
       console.log('Collection cleared successfully.\n');
+    }
+
+    // Provision default demo users idempotently
+    const defaultUsers = [
+      { username: 'admin', password: 'adminpassword', role: 'admin' },
+      { username: 'divyansh', password: 'sih@2026', role: 'admin' },
+      { username: 'demouser', password: 'userpassword', role: 'user' }
+    ];
+
+    console.log('Checking and provisioning default demo users...');
+    for (const u of defaultUsers) {
+      const existingUser = await User.findOne({ username: u.username });
+      if (!existingUser) {
+        const user = new User({
+          username: u.username,
+          password: u.password,
+          role: u.role
+        });
+        await user.save();
+        console.log(`[USER SEED] Created demo user: '${u.username}' (${u.role})`);
+      } else {
+        console.log(`[USER SEED] Demo user '${u.username}' already exists.`);
+      }
     }
 
     console.log('Loading AI model for embeddings (this may take a moment on first run)...');
