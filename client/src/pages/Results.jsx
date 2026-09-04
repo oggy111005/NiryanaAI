@@ -198,7 +198,7 @@ export default function Results() {
                               <div className="flex items-start justify-between gap-2 mb-1.5 flex-wrap">
                                 <div className="flex items-center gap-2">
                                   <span className="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                                    {cit.clauseId ? `Clause ${cit.clauseId}` : cit.clauseNumber ? `Clause ${cit.clauseNumber}` : 'Clause'}
+                                    {cit.clauseId ? `Clause ${cit.clauseId}` : cit.clauseNumber ? `Clause ${cit.clauseNumber}` : 'Clause —'}
                                   </span>
                                   <span className="font-semibold text-gray-900 text-xs">{cit.title}</span>
                                 </div>

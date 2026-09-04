@@ -109,9 +109,19 @@ standardSchema.pre(['updateOne', 'findOneAndUpdate', 'updateMany'], function() {
       update.$set.baseIsNumber = base;
       if (isDemo) {
         update.$set.isDemo = true;
-        update.$set.status = 'draft';
+        // Mirror pre('validate') symmetry: only set draft if status is absent or active
+        if (!update.$set.status || update.$set.status === 'active') {
+          update.$set.status = 'draft';
+        }
         update.$set.sourceUrl = null;
         update.$set.verifiedDate = null;
+        // Sanitize clause sourceUrls for DEMO records on $set updates
+        if (update.$set.clauses && Array.isArray(update.$set.clauses)) {
+          update.$set.clauses.forEach(c => { c.sourceUrl = null; });
+        }
+      } else {
+        if (update.$set.isDemo === undefined) update.$set.isDemo = false;
+        if (!update.$set.status) update.$set.status = 'active';
       }
     }
   }

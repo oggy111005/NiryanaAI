@@ -11,6 +11,15 @@ const Standard = require('./models/Standard');
 const History = require('./models/History');
 const User = require('./models/User');
 
+// Shared Gemini model factory — avoids re-instantiating per request in each route
+function getGeminiModel() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+}
+
+
 const app = express();
 
 // Configurable CORS origin
@@ -730,19 +739,6 @@ app.get('/api/history', authenticateToken, async (req, res) => {
   }
 });
 
-// 7. POST /api/explain — Recommendation Explainability
-//
-// Accepts { standardId, userQuery } and returns a short, grounded explanation
-// of why the recommended standard applies to the user's procurement specification.
-//
-// When a Gemini API key is configured:
-//   - Sends only the standard's own metadata to Gemini (no invented facts)
-//   - Instructs Gemini to cite only what is in the scope text
-//   - Caps output to 3-4 sentences to keep it readable
-//
-// When no Gemini API key is set:
-//   - Returns a deterministic template-based explanation built from scope
-//   - UI never shows a broken state
 // Return only explicitly stored clauses. Never manufacture clause text or links.
 function getStandardClauses(standard) {
   if (!standard.isDemo && standard.clauses && Array.isArray(standard.clauses) && standard.clauses.length > 0) {
@@ -751,8 +747,9 @@ function getStandardClauses(standard) {
   return [];
 }
 
-// Helper to deterministically rank and format structured citations for a query
-function rankAndFormatCitations(effectiveClauses, userQuery, standard) {
+// Deterministically rank and format structured citations for a query.
+// Used as the fallback when Gemini is unavailable or returns unstructured output.
+function rankAndFormatCitations(effectiveClauses, userQuery) {
   const queryTokens = userQuery.toLowerCase().split(/\W+/).filter(w => w.length > 2);
   const scored = effectiveClauses.map(clause => {
     let score = 0;
@@ -767,7 +764,7 @@ function rankAndFormatCitations(effectiveClauses, userQuery, standard) {
   const selected = scored.slice(0, Math.min(3, scored.length)).map(item => item.clause);
 
   return selected.map(c => ({
-    clauseId: `Clause ${c.clauseNumber}`,
+    clauseId: c.clauseNumber,
     clauseNumber: c.clauseNumber,
     title: c.title,
     text: c.text,
@@ -777,6 +774,12 @@ function rankAndFormatCitations(effectiveClauses, userQuery, standard) {
 }
 
 // 7. POST /api/explain — Recommendation Explainability with Clause-by-Clause Citations
+//
+// Accepts { standardId, userQuery }.
+// When a Gemini API key is configured: returns structured JSON with a plain-English
+// rationale and clause citations selected by the model (grounded to stored clauses only).
+// When no Gemini key is set: returns a deterministic template-based explanation
+// with keyword-ranked citations from stored clauses — UI is never broken.
 app.post('/api/explain', async (req, res) => {
   try {
     const { standardId, userQuery } = req.body;
@@ -792,14 +795,11 @@ app.post('/api/explain', async (req, res) => {
 
     const { isNumber, title, category, scope, certifications = [], latestVersion } = standard;
     const effectiveClauses = getStandardClauses(standard);
-    const fallbackCitations = rankAndFormatCitations(effectiveClauses, userQuery, standard);
+    const fallbackCitations = rankAndFormatCitations(effectiveClauses, userQuery);
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const model = getGeminiModel();
 
-    if (apiKey) {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
+    if (model) {
       const clausesContext = effectiveClauses.map(c => `[Clause ${c.clauseNumber}] ${c.title}: ${c.text}`).join('\n');
 
       const prompt = `You are a Bureau of Indian Standards (BIS) compliance assistant helping a procurement officer understand why a specific standard applies to their requirement.
@@ -820,7 +820,7 @@ You must return a valid JSON object with the following structure:
   "explanation": "A 3-4 sentence plain-English explanation for a procurement officer of why this standard applies. Do not start with 'This standard'.",
   "citations": [
     {
-      "clauseId": "Clause 1.1",
+      "clauseId": "1.1",
       "clauseNumber": "1.1",
       "title": "Title of clause",
       "text": "Exact text or key requirement excerpt from the clause",
@@ -841,10 +841,14 @@ Rules:
         const parsed = JSON.parse(cleaned);
 
         if (parsed.explanation) {
-          return res.json({ explanation: parsed.explanation, citations: fallbackCitations, source: 'gemini' });
+          // Use Gemini's selected citations when valid, fall back to deterministic ranking
+          const citations = Array.isArray(parsed.citations) && parsed.citations.length > 0
+            ? parsed.citations
+            : fallbackCitations;
+          return res.json({ explanation: parsed.explanation, citations, source: 'gemini' });
         }
       } catch (geminiErr) {
-        console.warn('Gemini structured response parsing failed, using fallback structured citations:', geminiErr.message);
+        console.warn('Gemini structured response parsing failed, using fallback citations:', geminiErr.message);
       }
     }
 
@@ -876,14 +880,9 @@ app.post('/api/chat', async (req, res) => {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Message required' });
 
-    // Check if the user has provided a Gemini API Key in .env
-    const apiKey = process.env.GEMINI_API_KEY;
-    
-    if (apiKey) {
-      // Connect to real Google Gemini API!
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
+    const model = getGeminiModel();
+
+    if (model) {
       const prompt = `You are the NiryanaAI Assistant, helping users search for Indian Standards (IS). 
       The user says: "${message}"
       Please provide a brief, helpful response. If they want a query rewritten, rewrite it to be highly descriptive for semantic search.`;
