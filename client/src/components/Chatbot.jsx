@@ -21,6 +21,17 @@ export default function Chatbot() {
     }
   }, [messages, isOpen]);
 
+  useEffect(() => {
+    const handleOpenChatbot = (e) => {
+      setIsOpen(true);
+      if (e.detail?.prompt) {
+        setInput(e.detail.prompt);
+      }
+    };
+    window.addEventListener('open-chatbot', handleOpenChatbot);
+    return () => window.removeEventListener('open-chatbot', handleOpenChatbot);
+  }, []);
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api, { getCleanBisUrl } from '../api';
-import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText, Calendar } from 'lucide-react';
+import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText, Calendar, Bot } from 'lucide-react';
 
 export default function Detail() {
   const { id } = useParams();
@@ -108,19 +108,32 @@ export default function Detail() {
           </div>
           <h2 className="text-2xl text-gray-800 font-medium">{standard.title}</h2>
         </div>
-        <button
-          type="button"
-          onClick={toggleBookmark}
-          title={isBookmarked ? "Remove from Saved Standards" : "Save Standard"}
-          className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold ${
-            isBookmarked
-              ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-sm'
-              : 'border-gray-300 hover:bg-gray-50 text-gray-700'
-          }`}
-        >
-          <Bookmark size={18} className={isBookmarked ? "fill-amber-500 text-amber-500" : "text-gray-500"} />
-          <span>{isBookmarked ? "Saved" : "Save"}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const prompt = `Can you explain the key requirements of ${standard.isNumber} in simple terms?`;
+              window.dispatchEvent(new CustomEvent('open-chatbot', { detail: { prompt } }));
+            }}
+            className="px-3 py-2 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold shadow-sm"
+            title="Ask AI to summarize this standard"
+          >
+            <Bot size={18} />
+            Ask AI
+          </button>
+          <button
+            type="button"
+            onClick={toggleBookmark}
+            title={isBookmarked ? "Remove from Saved Standards" : "Save Standard"}
+            className={`px-3 py-2 border rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold ${
+              isBookmarked
+                ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-sm'
+                : 'border-gray-300 hover:bg-gray-50 text-gray-700'
+            }`}
+          >
+            <Bookmark size={18} className={isBookmarked ? "fill-amber-500 text-amber-500" : "text-gray-500"} />
+            <span>{isBookmarked ? "Saved" : "Save"}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
