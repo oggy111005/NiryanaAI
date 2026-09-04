@@ -984,6 +984,32 @@ app.get('/api/standards', async (req, res) => {
   }
 });
 
+// 3b. GET /api/suggestions?q=... — Fast autocomplete for search box
+app.get('/api/suggestions', async (req, res) => {
+  try {
+    const q = (req.query.q || '').trim();
+    if (!q || q.length < 2) return res.json([]);
+
+    const safe = escapeRegex(q);
+    const results = await Standard.find({
+      isDemo: false,
+      $or: [
+        { isNumber: { $regex: safe, $options: 'i' } },
+        { title: { $regex: safe, $options: 'i' } },
+        { category: { $regex: safe, $options: 'i' } },
+        { scope: { $regex: safe, $options: 'i' } }
+      ]
+    })
+      .select('isNumber title category')
+      .limit(6)
+      .lean();
+
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: 'Suggestions error' });
+  }
+});
+
 // 4. POST /api/standards (Protected: Admin Only, Cold-Start Guarded)
 app.post('/api/standards', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
