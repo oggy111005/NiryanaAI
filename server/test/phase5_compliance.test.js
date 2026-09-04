@@ -21,7 +21,7 @@ if (!dbName.endsWith('-test')) {
 process.env.MONGODB_URI = TEST_DB_URI;
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'phase5-test-jwt-secret';
 
-const { app } = require('../server');
+const { app, setExtractor } = require('../server');
 
 let server;
 let baseUrl;
@@ -39,6 +39,10 @@ test.before(async () => {
     process.env.JWT_SECRET,
     { expiresIn: '1h' }
   );
+
+  setExtractor(async () => ({
+    data: new Float32Array(384).fill(0.08)
+  }));
 });
 
 test.after(async () => {
@@ -143,3 +147,67 @@ test('5. Borderline parameters return overallStatus VERIFY', async () => {
   assert.equal(data.overallStatus, 'VERIFY');
   assert.equal(data.badgeColor, 'yellow');
 });
+
+test('6. Range parameters (between) evaluate correctly for water pipe specifications', async () => {
+  const res = await fetch(`${baseUrl}/api/screen-compliance`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${validToken}`
+    },
+    body: JSON.stringify({
+      isNumber: 'IS 4984:2016',
+      materialName: 'HDPE Water Supply Pipes',
+      parameters: [
+        { parameterName: 'Carbon Black Content', clauseNumber: '2.3', requiredValue: '2.0 - 2.5', proposedValue: '2.25', unit: '%', operator: 'between' },
+        { parameterName: 'Hydrostatic Pressure Test', clauseNumber: '2.2', requiredValue: '1.6', proposedValue: '1.75', unit: 'MPa', operator: '>=' }
+      ]
+    })
+  });
+
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.overallStatus, 'COMPLIANT');
+  assert.equal(data.evaluatedParameters[0].status, 'PASS');
+});
+
+test('7. /api/analyze-tender extracts dynamic parameters and material domain', async () => {
+  const tenderText = `TENDER NO: PHED/WS/2026/PIPE-441
+NAME OF WORK: Supply and Laying of High-Density Polyethylene (HDPE) Pipes for Rural Drinking Water Supply Scheme.
+The contractor shall supply HDPE Pipes conforming to IS 4984.
+2.2 Hydrostatic Pressure Test: Pipes must withstand internal test pressure of minimum 1.6 MPa.
+2.3 Carbon Black Content: Carbon black content shall be between 2.0% and 2.5% by mass.
+2.5 Elongation at Break: Minimum tensile elongation at break shall not be less than 350%.`;
+
+  const boundary = '----WebKitFormBoundaryTenderTest1234';
+  const body = [
+    `--${boundary}`,
+    'Content-Disposition: form-data; name="file"; filename="water_pipe_tender.txt"',
+    'Content-Type: text/plain',
+    '',
+    tenderText,
+    `--${boundary}--`,
+    ''
+  ].join('\r\n');
+
+  const res = await fetch(`${baseUrl}/api/analyze-tender`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Authorization': `Bearer ${validToken}`
+    },
+    body
+  });
+
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.ok(data.materialName, 'materialName should be present');
+  assert.ok(Array.isArray(data.extractedParameters), 'extractedParameters should be an array');
+  assert.ok(data.extractedParameters.length > 0, 'Should extract at least one parameter');
+
+  // Verify that Hydrostatic Pressure Test (1.6 MPa) or Carbon Black was extracted
+  const hasHydro = data.extractedParameters.some(p => p.parameterName.includes('Hydrostatic') || p.requiredValue === '1.6');
+  const hasCarbon = data.extractedParameters.some(p => p.parameterName.includes('Carbon') || p.requiredValue.includes('2.0'));
+  assert.ok(hasHydro || hasCarbon, 'Should extract specific water pipe parameters from text');
+});
+

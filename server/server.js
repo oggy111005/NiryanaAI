@@ -50,6 +50,310 @@ const upload = multer({
   }
 });
 
+// Heuristic offline extraction for engineering tender specifications across domains
+function extractParametersHeuristic(text) {
+  const params = [];
+
+  let tenderTitle = 'Tender Technical Specifications';
+  let materialName = 'General Engineering Materials';
+
+  const titleMatch = text.match(/(?:PROJECT|WORK|TENDER FOR|NAME OF WORK)\s*[:\-]\s*([^\r\n]+)/i);
+  if (titleMatch) {
+    tenderTitle = titleMatch[1].trim();
+  }
+
+  // Material domain heuristics
+  if (/hdpe\s*pipe|polyethylene\s*pipe|water\s*supply\s*pipe|pvc\s*pipe|pipes?/i.test(text)) {
+    materialName = 'HDPE Water Supply Pipes (PE-100)';
+  } else if (/cement|portland|opc|concrete|bridge|girder/i.test(text)) {
+    materialName = 'Civil Infrastructure & Cementitious Materials';
+  } else if (/steel|reinforcement|rebar|tmt/i.test(text)) {
+    materialName = 'Structural Steel & Reinforcement Bars';
+  } else if (/bitumen|asphalt|road|pavement/i.test(text)) {
+    materialName = 'Bituminous Paving & Road Materials';
+  } else if (/cable|conductor|transformer|switchgear/i.test(text)) {
+    materialName = 'Electrical Distribution Equipment';
+  } else if (titleMatch) {
+    materialName = titleMatch[1].trim().substring(0, 50);
+  }
+
+  // 1. Compressive strength / Characteristic strength
+  const compMatch = text.match(/(?:(?:minimum|min\.?|at least)?\s*(?:(\d+)[ -]?day)?\s*compressive\s+strength|characteristic\s+strength)[^\d\r\n]*?(\d+(?:\.\d+)?)\s*(mpa|n\/mm[²2])/i);
+  if (compMatch) {
+    const days = compMatch[1] || '28';
+    const val = parseFloat(compMatch[2]);
+    params.push({
+      parameterName: `${days}-Day Compressive Strength`,
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: 'MPa',
+      proposedValue: (val * 1.1).toFixed(1),
+      compliantValue: (val * 1.1).toFixed(1),
+      nonCompliantValue: (val * 0.8).toFixed(1),
+      borderlineValue: (val * 0.97).toFixed(1)
+    });
+  }
+
+  // 2. Sulfur / SO3 Content
+  const so3Match = text.match(/(?:total\s+)?(?:sulfur|sulphur|so3|sulfuric\s+anhydride)[^\d\r\n]*?(?:shall not exceed|<=|max|maximum|not more than|less than)?\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (so3Match) {
+    const val = parseFloat(so3Match[1]);
+    params.push({
+      parameterName: 'Total Sulfur Content (SO3)',
+      clauseNumber: '2.1',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: '%',
+      proposedValue: (val * 0.75).toFixed(1),
+      compliantValue: (val * 0.75).toFixed(1),
+      nonCompliantValue: (val * 1.25).toFixed(1),
+      borderlineValue: (val * 1.02).toFixed(2)
+    });
+  }
+
+  // 3. Steel Grade / Yield Strength
+  const feMatch = text.match(/\bfe\s*([456]\d{2}(?:\s*d)?)\b/i);
+  const yieldMatch = text.match(/(?:yield\s+strength|0\.2%\s*proof\s+stress)[^\d\r\n]*?(?:minimum|min\.?|at least|>=)?\s*(\d+(?:\.\d+)?)\s*(n\/mm[²2]|mpa)?/i);
+  if (feMatch || yieldMatch) {
+    const grade = feMatch ? `Fe ${feMatch[1].toUpperCase()}` : 'High-Strength Steel';
+    const val = yieldMatch ? parseFloat(yieldMatch[1]) : (feMatch ? parseFloat(feMatch[1].replace(/\D/g, '')) : 500.0);
+    params.push({
+      parameterName: `${grade} Yield Strength`,
+      clauseNumber: '3.0',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: 'N/mm²',
+      proposedValue: (val * 1.07).toFixed(1),
+      compliantValue: (val * 1.07).toFixed(1),
+      nonCompliantValue: (val * 0.92).toFixed(1),
+      borderlineValue: (val * 0.98).toFixed(1)
+    });
+  }
+
+  // 4. Hydrostatic Pressure Test (for pipes/fittings)
+  const hydroMatch = text.match(/(?:hydrostatic(?:\s+test)?\s+pressure|internal\s+pressure|burst\s+pressure)[^\d\r\n]*?(?:minimum|min\.?|at least|of)?\s*(\d+(?:\.\d+)?)\s*(mpa|bar|kg\/cm[²2])/i);
+  if (hydroMatch) {
+    const val = parseFloat(hydroMatch[1]);
+    const unit = hydroMatch[2] || 'MPa';
+    params.push({
+      parameterName: 'Hydrostatic Pressure Test',
+      clauseNumber: '2.2',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: unit,
+      proposedValue: (val * 1.1).toFixed(2),
+      compliantValue: (val * 1.1).toFixed(2),
+      nonCompliantValue: (val * 0.8).toFixed(2),
+      borderlineValue: (val * 0.98).toFixed(2)
+    });
+  }
+
+  // 5. Carbon Black Content (for HDPE pipes/polymers)
+  const carbonMatch = text.match(/(?:carbon\s+black\s+content)[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*%?\s*(?:and|to)\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (carbonMatch) {
+    const min = parseFloat(carbonMatch[1]);
+    const max = parseFloat(carbonMatch[2]);
+    params.push({
+      parameterName: 'Carbon Black Content',
+      clauseNumber: '2.3',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: '%',
+      proposedValue: ((min + max) / 2).toFixed(2),
+      compliantValue: ((min + max) / 2).toFixed(2),
+      nonCompliantValue: (max * 1.25).toFixed(2),
+      borderlineValue: (max + 0.05).toFixed(2)
+    });
+  }
+
+  // 6. Melt Flow Rate (MFR)
+  const mfrMatch = text.match(/(?:melt\s+flow\s+rate|mfr)[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*(?:and|to)\s*(\d+(?:\.\d+)?)\s*(g\/10\s*min)/i);
+  if (mfrMatch) {
+    const min = parseFloat(mfrMatch[1]);
+    const max = parseFloat(mfrMatch[2]);
+    const unit = mfrMatch[3] || 'g/10 min';
+    params.push({
+      parameterName: 'Melt Flow Rate (MFR)',
+      clauseNumber: '2.4',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: unit,
+      proposedValue: ((min + max) / 2).toFixed(2),
+      compliantValue: ((min + max) / 2).toFixed(2),
+      nonCompliantValue: (max * 1.35).toFixed(2),
+      borderlineValue: (max + 0.03).toFixed(2)
+    });
+  }
+
+  // 7. Tensile Elongation at Break
+  const elongMatch = text.match(/(?:elongation(?:\s+at\s+break)?)[^\d\r\n]*?(?:not less than|minimum|min\.?|>=)?\s*(\d+(?:\.\d+)?)\s*%/i);
+  if (elongMatch) {
+    const val = parseFloat(elongMatch[1]);
+    params.push({
+      parameterName: 'Tensile Elongation at Break',
+      clauseNumber: '2.5',
+      requiredValue: String(val),
+      operator: '>=',
+      unit: '%',
+      proposedValue: (val * 1.15).toFixed(0),
+      compliantValue: (val * 1.15).toFixed(0),
+      nonCompliantValue: (val * 0.8).toFixed(0),
+      borderlineValue: (val * 0.98).toFixed(0)
+    });
+  }
+
+  // 8. Water Quality Parameters (TDS, pH, Turbidity, Hardness)
+  const tdsMatch = text.match(/(?:tds|total\s+dissolved\s+solids)[^\d\r\n]*?(?:below|less than|under|<=|not exceed|max|maximum|is)?\s*(\d+(?:\.\d+)?)\s*(mg\/l|ppm)?/i);
+  if (tdsMatch) {
+    const val = parseFloat(tdsMatch[1]);
+    const unit = tdsMatch[2] || 'mg/L';
+    params.push({
+      parameterName: 'Total Dissolved Solids (TDS)',
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: unit,
+      proposedValue: (val * 0.75).toFixed(0),
+      compliantValue: (val * 0.75).toFixed(0),
+      nonCompliantValue: (val * 1.3).toFixed(0),
+      borderlineValue: (val * 1.02).toFixed(0)
+    });
+  }
+
+  const phMatch = text.match(/\bph(?:\s+value)?\b[^\d\r\n]*?between\s*(\d+(?:\.\d+)?)\s*(?:and|to)\s*(\d+(?:\.\d+)?)/i);
+  if (phMatch) {
+    const min = parseFloat(phMatch[1]);
+    const max = parseFloat(phMatch[2]);
+    params.push({
+      parameterName: 'pH Value',
+      clauseNumber: '2.0',
+      requiredValue: `${min} - ${max}`,
+      operator: 'between',
+      unit: '',
+      proposedValue: ((min + max) / 2).toFixed(1),
+      compliantValue: ((min + max) / 2).toFixed(1),
+      nonCompliantValue: (max + 1.2).toFixed(1),
+      borderlineValue: (max + 0.1).toFixed(1)
+    });
+  }
+
+  const turbMatch = text.match(/(?:turbidity)[^\d\r\n]*?(?:below|less than|under|<=|not exceed|max|maximum)?\s*(\d+(?:\.\d+)?)\s*(ntu)?/i);
+  if (turbMatch) {
+    const val = parseFloat(turbMatch[1]);
+    params.push({
+      parameterName: 'Turbidity',
+      clauseNumber: '2.0',
+      requiredValue: String(val),
+      operator: '<=',
+      unit: 'NTU',
+      proposedValue: (val * 0.7).toFixed(1),
+      compliantValue: (val * 0.7).toFixed(1),
+      nonCompliantValue: (val * 1.4).toFixed(1),
+      borderlineValue: (val * 1.05).toFixed(1)
+    });
+  }
+
+  // 9. BIS / ISI Certification Mark
+  const certMatch = text.match(/(?:isi\s*(?:certification)?\s*mark|bis\s*license|bis\s*certification|conforming to is)/i);
+  if (certMatch) {
+    params.push({
+      parameterName: 'BIS ISI Certification Mark',
+      clauseNumber: '6.1',
+      requiredValue: 'valid',
+      operator: 'includes',
+      unit: '',
+      proposedValue: 'Valid & Active (CM/L-9812450)',
+      compliantValue: 'Valid & Active (CM/L-9812450)',
+      nonCompliantValue: 'Expired / Revoked',
+      borderlineValue: 'Pending Renewal Audit'
+    });
+  }
+
+  return {
+    materialName,
+    tenderTitle,
+    parameters: params
+  };
+}
+
+// Universal AI tender specification extractor powered by Gemini with fallback
+async function extractTenderParametersWithAI(text) {
+  const model = getGeminiModel();
+  if (model) {
+    try {
+      const prompt = `You are a Bureau of Indian Standards (BIS) and Government e-Marketplace (GeM) technical procurement expert.
+Analyze the following tender document and extract:
+1. "materialName": Concise name of the procured item/material domain (e.g. "HDPE Water Supply Pipes (PE-100)", "Ordinary Portland Cement & Structural Steel", "Submersible Pumps", "Solar PV Modules", "Bituminous Road Surfacing").
+2. "tenderTitle": Project or procurement title if found in the text (or "Tender Technical Specifications").
+3. "parameters": An array of all technical specifications, physical/chemical criteria, test requirements, quality metrics, or certification conditions required by the tender.
+
+For each parameter in "parameters", provide:
+- "parameterName": Concise, specific technical parameter name (e.g. "Hydrostatic Pressure Test", "28-Day Compressive Strength", "Melt Flow Rate (MFR)", "Total Sulfur Content (SO3)", "Fe 500 Yield Strength", "BIS ISI Certification Mark").
+- "clauseNumber": The clause, section, or paragraph number from the tender (e.g. "2.2", "4.1", "1.0", or "General").
+- "requiredValue": The exact required numerical threshold or condition from the tender (e.g. "1.6", "35.0", "3.5", "500.0", "2.0 - 2.5", "valid").
+- "operator": One of: ">=", "<=", "between", "==", or "includes".
+- "unit": Unit of measurement (e.g. "MPa", "%", "N/mm²", "g/10 min", "mm", or "" if unitless).
+- "compliantValue": A realistic vendor test value that meets/passes this requirement.
+- "nonCompliantValue": A realistic vendor test value that fails this requirement.
+- "borderlineValue": A realistic vendor test value on the edge/borderline (within 5% of boundary or pending certification).
+
+TENDER TEXT:
+"""
+${text.substring(0, 4000)}
+"""
+
+Return ONLY a valid JSON object matching this structure with no markdown backticks or commentary:
+{
+  "materialName": "...",
+  "tenderTitle": "...",
+  "parameters": [
+    {
+      "parameterName": "...",
+      "clauseNumber": "...",
+      "requiredValue": "...",
+      "operator": "...",
+      "unit": "...",
+      "compliantValue": "...",
+      "nonCompliantValue": "...",
+      "borderlineValue": "..."
+    }
+  ]
+}`;
+
+      const aiPromise = model.generateContent(prompt);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('AI extraction timeout')), 8000));
+      const aiResult = await Promise.race([aiPromise, timeoutPromise]);
+      const rawText = aiResult.response.text().trim();
+      const cleaned = rawText.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      if (parsed && Array.isArray(parsed.parameters) && parsed.parameters.length > 0) {
+        return {
+          materialName: parsed.materialName || 'Procured Materials',
+          tenderTitle: parsed.tenderTitle || 'Tender Document',
+          parameters: parsed.parameters.map((p, idx) => ({
+            parameterName: String(p.parameterName || `Specification Criterion ${idx + 1}`),
+            clauseNumber: String(p.clauseNumber || `${idx + 1}.0`),
+            requiredValue: String(p.requiredValue || ''),
+            operator: ['>=', '<=', 'between', '==', 'includes'].includes(p.operator) ? p.operator : '>=',
+            unit: String(p.unit || ''),
+            proposedValue: String(p.compliantValue || p.requiredValue || ''),
+            compliantValue: String(p.compliantValue || p.requiredValue || ''),
+            nonCompliantValue: String(p.nonCompliantValue || ''),
+            borderlineValue: String(p.borderlineValue || '')
+          }))
+        };
+      }
+    } catch (geminiErr) {
+      console.warn('Gemini tender parameter extraction failed, falling back to heuristic parser:', geminiErr.message);
+    }
+  }
+
+  // Fallback to heuristic parser
+  return extractParametersHeuristic(text);
+}
+
 // 6. POST /api/analyze-tender (Tender Document Specification Analyzer - SIH Phase 5)
 app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
@@ -109,8 +413,14 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
       });
     }
 
+    // Dynamic Parameter & Specification Extraction via Gemini AI (with heuristic fallback)
+    const extractedData = await extractTenderParametersWithAI(text);
+
     res.json({
       documentName: req.file.originalname,
+      materialName: extractedData.materialName,
+      tenderTitle: extractedData.tenderTitle,
+      extractedParameters: extractedData.parameters,
       analyzedClauses: analysisResults.length,
       results: analysisResults
     });
@@ -138,7 +448,22 @@ app.post('/api/screen-compliance', authenticateToken, async (req, res) => {
       let isPassing = true;
       let isBorderline = false;
 
-      if (!isNaN(requiredVal) && !isNaN(proposedVal)) {
+      if (op === 'between' || String(p.requiredValue).includes('-')) {
+        const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+        if (parts.length === 2) {
+          const min = Math.min(parts[0], parts[1]);
+          const max = Math.max(parts[0], parts[1]);
+          if (!isNaN(proposedVal)) {
+            isPassing = proposedVal >= min && proposedVal <= max;
+            if (!isPassing) {
+              const span = max - min || 1;
+              if (proposedVal >= min - span * 0.05 && proposedVal <= max + span * 0.05) {
+                isBorderline = true;
+              }
+            }
+          }
+        }
+      } else if (!isNaN(requiredVal) && !isNaN(proposedVal)) {
         if (op === '>=') {
           isPassing = proposedVal >= requiredVal;
           if (!isPassing && proposedVal >= requiredVal * 0.95) isBorderline = true;
