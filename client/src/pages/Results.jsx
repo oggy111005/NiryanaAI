@@ -1,7 +1,27 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import api, { getCleanBisUrl } from '../api';
-import { ArrowLeft, CheckCircle, Shield, FileText, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Shield, FileText, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen, Copy, Check } from 'lucide-react';
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy}
+      title="Copy IS Number"
+      className="ml-2 p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center shadow-sm"
+    >
+      {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
+    </button>
+  );
+};
 
 export default function Results() {
   const location = useLocation();
@@ -67,7 +87,10 @@ export default function Results() {
           
           <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4 pt-2">
             <div>
-              <h2 className={`text-3xl font-bold ${primary.matchType ? 'text-green-700' : 'text-primary'}`}>{primary.isNumber}</h2>
+              <h2 className={`text-3xl font-bold flex items-center ${primary.matchType ? 'text-green-700' : 'text-primary'}`}>
+                {primary.isNumber}
+                <CopyButton text={primary.isNumber} />
+              </h2>
               <h3 className="text-xl text-gray-800 font-medium mt-1">{primary.title}</h3>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -265,9 +288,10 @@ export default function Results() {
             <ul className="space-y-3">
               {primary.alliedStandards.map((allied, idx) => (
                 <li key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-3 rounded shadow-sm border border-gray-100">
-                  <div>
-                    <span className="font-bold text-primary mr-2">{allied.isNumber}</span>
-                    <span className="text-gray-700 text-sm">{allied.title}</span>
+                  <div className="flex items-center">
+                    <span className="font-bold text-primary">{allied.isNumber}</span>
+                    <CopyButton text={allied.isNumber} />
+                    <span className="text-gray-700 text-sm ml-3 border-l border-gray-200 pl-3">{allied.title}</span>
                   </div>
                   {allied.type && (
                     <span className="mt-2 sm:mt-0 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
@@ -290,9 +314,12 @@ export default function Results() {
             {related.map((std, idx) => (
               <div key={idx} className="bg-white p-4 rounded-md shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-2">
-                  <Link to={`/standard/${std._id}`} className="text-lg font-semibold text-primary hover:underline">
-                    {std.isNumber}
-                  </Link>
+                  <div className="flex items-center">
+                    <Link to={`/standard/${std._id}`} className="text-lg font-semibold text-primary hover:underline">
+                      {std.isNumber}
+                    </Link>
+                    <CopyButton text={std.isNumber} />
+                  </div>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                     {(std.similarityScore * 100).toFixed(0)}% match
                   </span>

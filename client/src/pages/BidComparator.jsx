@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
 import api from '../api';
-import { Scale, FileText, CheckCircle, AlertTriangle, Loader2, Award, ArrowRight } from 'lucide-react';
+import { Scale, FileText, CheckCircle, AlertTriangle, Loader2, Award, ArrowRight, Copy, Check } from 'lucide-react';
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy}
+      title="Copy IS Number"
+      className="ml-2 p-1 bg-gray-50 hover:bg-gray-200 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center shadow-sm"
+    >
+      {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+    </button>
+  );
+};
 
 const SAMPLE_BID_A = `VENDOR PROPOSAL A
 We will supply heavy civil structural materials for the bridge project.
@@ -111,7 +131,10 @@ export default function BidComparator() {
             <li key={i} className="flex gap-3 items-start bg-white p-3 rounded border border-gray-100 shadow-sm">
               <CheckCircle size={18} className="text-green-500 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-primary block">{std.isNumber}</span>
+                <div className="flex items-center">
+                  <span className="font-bold text-primary">{std.isNumber}</span>
+                  <CopyButton text={std.isNumber} />
+                </div>
                 <span className="text-sm text-gray-600 leading-tight block mt-1">{std.title}</span>
                 <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded mt-2 inline-block">
                   {(std.score * 100).toFixed(0)}% Confidence

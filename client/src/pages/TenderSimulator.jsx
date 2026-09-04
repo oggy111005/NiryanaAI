@@ -6,8 +6,28 @@ import {
   Loader2, ClipboardList, ChevronDown, ChevronUp, X,
   ShieldCheck, AlertCircle, CheckCircle2, XCircle,
   Download, Printer, UserCheck, Stamp, Lock,
-  Edit3, Building2, PlusCircle, Trash2, Send
+  Edit3, Building2, PlusCircle, Trash2, Send, Copy, Check
 } from 'lucide-react';
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <button 
+      onClick={handleCopy}
+      title="Copy IS Number"
+      className="ml-2 p-1 bg-gray-50 hover:bg-gray-200 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors inline-flex items-center shadow-sm"
+    >
+      {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+    </button>
+  );
+};
 
 const CONFIDENCE_LABELS = [
   { min: 0.75, label: 'High Confidence', color: 'text-green-700 bg-green-100 border-green-300' },
@@ -584,7 +604,10 @@ export default function TenderSimulator() {
                 {allMatchedStandards.map((std, idx) => (
                   <li key={idx} className="flex items-center gap-3 py-2.5">
                     <CheckCircle size={16} className="text-green-500 shrink-0" />
-                    <span className="font-bold text-primary text-sm w-32 shrink-0">{std.isNumber}</span>
+                    <div className="w-40 shrink-0 flex items-center">
+                      <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                      <CopyButton text={std.isNumber} />
+                    </div>
                     <span className="text-gray-700 text-sm">{std.title}</span>
                     <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded border ${getConfidenceLabel(std.score).color}`}>
                       {getConfidenceLabel(std.score).label}
@@ -973,7 +996,10 @@ export default function TenderSimulator() {
                               <li key={sIdx} className="flex items-center gap-3 bg-white border border-gray-200 rounded p-3">
                                 <FileText size={16} className="text-primary shrink-0" />
                                 <div className="flex-1 min-w-0">
-                                  <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                                  <div className="flex items-center">
+                                    <span className="font-bold text-primary text-sm">{std.isNumber}</span>
+                                    <CopyButton text={std.isNumber} />
+                                  </div>
                                   <p className="text-xs text-gray-600 truncate">{std.title}</p>
                                 </div>
                                 <span className={`text-xs font-semibold px-2 py-0.5 rounded border shrink-0 ${conf.color}`}>
