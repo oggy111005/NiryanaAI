@@ -55,14 +55,10 @@ export default function TenderSimulator() {
 
   // --- Custom Bid & Lab Test Entry State ---
   const [showCustomBidForm, setShowCustomBidForm] = useState(false);
-  const [customBidderName, setCustomBidderName] = useState('UltraTech Cement & Infrastructure Ltd');
+  const [customMaterialName, setCustomMaterialName] = useState('');
+  const [customBidderName, setCustomBidderName] = useState('Vendor Technical Proposal');
   const [customLabReportNo, setCustomLabReportNo] = useState('NABL/TC-2026/8941');
-  const [customParams, setCustomParams] = useState([
-    { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
-    { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
-    { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
-    { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
-  ]);
+  const [customParams, setCustomParams] = useState([]);
 
   // --- Engineer Review & Decision State ---
   const [engineerDecision, setEngineerDecision] = useState('approve');
@@ -96,14 +92,10 @@ export default function TenderSimulator() {
     setScreeningError('');
     setActivePreset(null);
     setShowCustomBidForm(false);
-    setCustomBidderName('UltraTech Cement & Infrastructure Ltd');
+    setCustomMaterialName('');
+    setCustomBidderName('Vendor Technical Proposal');
     setCustomLabReportNo('NABL/TC-2026/8941');
-    setCustomParams([
-      { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
-      { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
-      { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
-      { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
-    ]);
+    setCustomParams([]);
     setEngineerDecision('approve');
     setEngineerNotes('');
     setIsDecisionRecorded(false);
@@ -136,10 +128,12 @@ export default function TenderSimulator() {
     setScreeningLoading(true);
     setScreeningError('');
 
+    const isNumberSummary = allMatchedStandards.map(s => s.isNumber).slice(0, 2).join(' / ') || 'Applicable IS Standards';
+
     try {
       const res = await api.post('/api/screen-compliance', {
-        isNumber: 'IS 269 / IS 1786 (Bridge Spec)',
-        materialName: `Bridge Construction Materials (Bidder: ${customBidderName || 'Vendor'})`,
+        isNumber: isNumberSummary,
+        materialName: `${customMaterialName || 'Procured Material'} (Bidder: ${customBidderName || 'Vendor'})`,
         parameters: customParams
       });
       setScreeningData({
@@ -159,6 +153,7 @@ export default function TenderSimulator() {
       portal: 'NiryanaAI GeM-Style Procurement Simulator',
       purpose: 'Demonstration and Evaluation Purposes Only',
       tenderDocument: results?.documentName || 'tender_spec.txt',
+      materialDomain: customMaterialName || results?.materialName || 'General Procurement Spec',
       analyzedClausesCount: results?.analyzedClauses || 0,
       mappedStandards: allMatchedStandards.map(s => ({
         isNumber: s.isNumber,
@@ -202,48 +197,75 @@ export default function TenderSimulator() {
     setScreeningLoading(true);
     setScreeningError('');
 
-    let parameters = [];
-    let bidderName = 'Bridge Civil Supplier Ltd';
+    const activeParams = customParams.length > 0 ? customParams : (results?.extractedParameters || []);
+    
+    let bidderName = 'Vendor Supplies Consortium';
     let labReportNo = 'NABL-2026-CERT-01';
 
     if (presetType === 'compliant') {
-      bidderName = 'Ambuja Cements & Tata Steel Consortium';
+      bidderName = `${customMaterialName ? customMaterialName.split(' ')[0] : 'Certified'} Quality Supplies Ltd`;
       labReportNo = 'NABL/2026/PASS-9102';
-      parameters = [
-        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '48.5', unit: 'MPa', operator: '>=' },
-        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '2.6', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' },
-        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '535.0', unit: 'N/mm²', operator: '>=' }
-      ];
     } else if (presetType === 'non_compliant') {
-      bidderName = 'Substandard Materials Trading Co.';
+      bidderName = 'Substandard Trading & Supplies Co.';
       labReportNo = 'QC-FAIL-2026-044';
-      parameters = [
-        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '31.2', unit: 'MPa', operator: '>=' },
-        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '4.4', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Expired / Revoked', unit: '', operator: 'includes' },
-        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '468.0', unit: 'N/mm²', operator: '>=' }
-      ];
     } else if (presetType === 'verify') {
-      bidderName = 'National Infrastructure Supplies Pvt Ltd';
+      bidderName = 'National Industrial Supplies Pvt Ltd';
       labReportNo = 'REV-AUDIT-2026-11';
-      parameters = [
-        { parameterName: '28-Day Compressive Strength', clauseNumber: '4.2', requiredValue: '43.0', proposedValue: '41.8', unit: 'MPa', operator: '>=' },
-        { parameterName: 'Total Sulfur Content (SO3)', clauseNumber: '4.1', requiredValue: '3.5', proposedValue: '3.45', unit: '%', operator: '<=' },
-        { parameterName: 'BIS ISI Certification Mark', clauseNumber: '6.1', requiredValue: 'valid', proposedValue: 'Pending Renewal Audit', unit: '', operator: 'includes' },
-        { parameterName: 'Fe 500 Yield Strength', clauseNumber: '5.1', requiredValue: '500.0', proposedValue: '495.0', unit: 'N/mm²', operator: '>=' }
-      ];
     }
+
+    const parameters = activeParams.map(p => {
+      let proposedVal = p.proposedValue;
+      if (presetType === 'compliant') {
+        if (p.compliantValue) {
+          proposedVal = p.compliantValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.75).toFixed(1) : p.requiredValue;
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.1).toFixed(1) : p.requiredValue;
+        } else if (p.operator === 'between') {
+          const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+          proposedVal = parts.length === 2 ? ((parts[0] + parts[1]) / 2).toFixed(2) : p.requiredValue;
+        } else {
+          proposedVal = 'Valid & Active (CM/L-9812450)';
+        }
+      } else if (presetType === 'non_compliant') {
+        if (p.nonCompliantValue) {
+          proposedVal = p.nonCompliantValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.3).toFixed(1) : 'Excessive';
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.8).toFixed(1) : 'Substandard';
+        } else if (p.operator === 'between') {
+          const parts = String(p.requiredValue).split(/[-–—]|to/i).map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+          proposedVal = parts.length === 2 ? (Math.max(parts[0], parts[1]) * 1.25).toFixed(2) : 'Out of Range';
+        } else {
+          proposedVal = 'Expired / Revoked';
+        }
+      } else if (presetType === 'verify') {
+        if (p.borderlineValue) {
+          proposedVal = p.borderlineValue;
+        } else if (p.operator === '<=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 1.02).toFixed(2) : p.requiredValue;
+        } else if (p.operator === '>=') {
+          proposedVal = !isNaN(parseFloat(p.requiredValue)) ? (parseFloat(p.requiredValue) * 0.97).toFixed(1) : p.requiredValue;
+        } else {
+          proposedVal = 'Pending Renewal Audit';
+        }
+      }
+      return { ...p, proposedValue: String(proposedVal) };
+    });
 
     setCustomBidderName(bidderName);
     setCustomLabReportNo(labReportNo);
     setCustomParams(parameters);
     setShowCustomBidForm(true);
 
+    const isNumberSummary = allMatchedStandards.map(s => s.isNumber).slice(0, 2).join(' / ') || 'Applicable IS Standards';
+
     try {
       const res = await api.post('/api/screen-compliance', {
-        isNumber: 'IS 269 / IS 1786 (Bridge Spec)',
-        materialName: `Bridge Construction Materials (${bidderName})`,
+        isNumber: isNumberSummary,
+        materialName: `${customMaterialName || 'Procured Material'} (${bidderName})`,
         parameters
       });
       setScreeningData({
@@ -278,6 +300,19 @@ export default function TenderSimulator() {
 
       const res = await api.post('/api/analyze-tender', form);
       setResults(res.data);
+      if (res.data.materialName) {
+        setCustomMaterialName(res.data.materialName);
+      }
+      if (res.data.extractedParameters && res.data.extractedParameters.length > 0) {
+        setCustomParams(res.data.extractedParameters);
+        setShowCustomBidForm(true);
+      } else {
+        setCustomParams([
+          { parameterName: 'General Specification Compliance', clauseNumber: '1.0', requiredValue: 'valid', proposedValue: 'Conforming to IS Requirements', unit: '', operator: 'includes' },
+          { parameterName: 'Mandatory BIS ISI Certification Mark', clauseNumber: '2.0', requiredValue: 'valid', proposedValue: 'Valid & Active (CM/L-9812450)', unit: '', operator: 'includes' }
+        ]);
+        setShowCustomBidForm(true);
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Analysis failed. Please try again.');
     } finally {
@@ -519,6 +554,19 @@ export default function TenderSimulator() {
                   </button>
                 </div>
 
+                {/* Material Domain & Extraction Badge */}
+                {customMaterialName && (
+                  <div className="mb-4 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-md flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-900 font-semibold">Tender Scope:</span>
+                      <span className="font-bold text-gray-800">{customMaterialName}</span>
+                    </div>
+                    <span className="text-blue-800 font-medium text-[11px] bg-white px-2.5 py-0.5 rounded-full border border-blue-200 shadow-2xs">
+                      ⚡ AI Extracted: {customParams.length} technical requirement{customParams.length === 1 ? '' : 's'}
+                    </span>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <div>
                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
@@ -528,7 +576,7 @@ export default function TenderSimulator() {
                       type="text"
                       value={customBidderName}
                       onChange={e => setCustomBidderName(e.target.value)}
-                      placeholder="e.g. UltraTech Cement Ltd"
+                      placeholder="e.g. Apex Engineering & Supplies Ltd"
                       className="w-full border border-gray-300 rounded px-3 py-1.5 text-xs focus:ring-primary focus:border-primary bg-white"
                     />
                   </div>
@@ -548,61 +596,67 @@ export default function TenderSimulator() {
 
                 {/* Interactive Parameters Table */}
                 <div className="border border-gray-200 rounded-md overflow-hidden bg-white mb-3">
-                  <table className="min-w-full divide-y divide-gray-200 text-xs">
-                    <thead className="bg-gray-100 text-gray-600 font-semibold uppercase">
-                      <tr>
-                        <th className="px-3 py-2 text-left w-20">Clause</th>
-                        <th className="px-3 py-2 text-left">Parameter Name</th>
-                        <th className="px-3 py-2 text-left w-36">Required Criteria</th>
-                        <th className="px-3 py-2 text-left w-48">Submitted Vendor Value</th>
-                        <th className="px-3 py-2 text-center w-12">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {customParams.map((p, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={p.clauseNumber}
-                              onChange={e => handleParamChange(idx, 'clauseNumber', e.target.value)}
-                              className="w-full border border-gray-200 rounded px-1.5 py-1 text-[11px] font-mono"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={p.parameterName}
-                              onChange={e => handleParamChange(idx, 'parameterName', e.target.value)}
-                              className="w-full border border-gray-200 rounded px-2 py-1 text-xs font-medium"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-gray-600 font-mono text-xs">
-                            {p.operator} {p.requiredValue} {p.unit}
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={p.proposedValue}
-                              onChange={e => handleParamChange(idx, 'proposedValue', e.target.value)}
-                              placeholder="e.g. 48.5"
-                              className="w-full border border-blue-300 rounded px-2 py-1 text-xs font-bold font-mono focus:ring-1 focus:ring-primary bg-blue-50/40"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveParam(idx)}
-                              className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                              title="Remove Parameter"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </td>
+                  {customParams.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-gray-500">
+                      No technical parameters found. Click "+ Add Another Parameter" below to define custom criteria.
+                    </div>
+                  ) : (
+                    <table className="min-w-full divide-y divide-gray-200 text-xs">
+                      <thead className="bg-gray-100 text-gray-600 font-semibold uppercase">
+                        <tr>
+                          <th className="px-3 py-2 text-left w-20">Clause</th>
+                          <th className="px-3 py-2 text-left">Parameter Name</th>
+                          <th className="px-3 py-2 text-left w-36">Required Criteria</th>
+                          <th className="px-3 py-2 text-left w-48">Submitted Vendor Value</th>
+                          <th className="px-3 py-2 text-center w-12">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {customParams.map((p, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50">
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.clauseNumber}
+                                onChange={e => handleParamChange(idx, 'clauseNumber', e.target.value)}
+                                className="w-full border border-gray-200 rounded px-1.5 py-1 text-[11px] font-mono"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.parameterName}
+                                onChange={e => handleParamChange(idx, 'parameterName', e.target.value)}
+                                className="w-full border border-gray-200 rounded px-2 py-1 text-xs font-medium"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-gray-700 font-mono text-xs">
+                              <span className="font-semibold text-primary">{p.operator === 'between' ? 'between' : p.operator}</span> {p.requiredValue} {p.unit}
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="text"
+                                value={p.proposedValue}
+                                onChange={e => handleParamChange(idx, 'proposedValue', e.target.value)}
+                                placeholder="Submitted value"
+                                className="w-full border border-blue-300 rounded px-2 py-1 text-xs font-bold font-mono focus:ring-1 focus:ring-primary bg-blue-50/40"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveParam(idx)}
+                                className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                title="Remove Parameter"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
