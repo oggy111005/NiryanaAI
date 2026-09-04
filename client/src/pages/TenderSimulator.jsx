@@ -4,7 +4,8 @@ import axios from 'axios';
 import {
   UploadCloud, FileText, AlertTriangle, CheckCircle,
   Loader2, ClipboardList, ChevronDown, ChevronUp, X,
-  ShieldCheck, AlertCircle, CheckCircle2, XCircle, Play, Sparkles
+  ShieldCheck, AlertCircle, CheckCircle2, XCircle, Play, Sparkles,
+  Download, Printer, UserCheck, Stamp, Lock
 } from 'lucide-react';
 
 const CONFIDENCE_LABELS = [
@@ -51,6 +52,13 @@ export default function TenderSimulator() {
   const [screeningError, setScreeningError] = useState('');
   const [activePreset, setActivePreset] = useState(null);
 
+  // --- Engineer Review & Decision State ---
+  const [engineerDecision, setEngineerDecision] = useState('approve');
+  const [engineerNotes, setEngineerNotes] = useState('');
+  const [isDecisionRecorded, setIsDecisionRecorded] = useState(false);
+  const [recordedAuditId, setRecordedAuditId] = useState(null);
+  const [recordedTimestamp, setRecordedTimestamp] = useState(null);
+
   const toggleClause = (idx) =>
     setOpenClauses(prev => ({ ...prev, [idx]: !prev[idx] }));
 
@@ -58,6 +66,12 @@ export default function TenderSimulator() {
     setMode('paste');
     setText(SAMPLE_TENDER_TEXT);
     setError('');
+  };
+
+  const handleRecordDecision = () => {
+    setIsDecisionRecorded(true);
+    setRecordedAuditId(`AUDIT-2026-IS-${Math.floor(100000 + Math.random() * 900000)}`);
+    setRecordedTimestamp(new Date().toLocaleString());
   };
 
   const reset = () => {
@@ -69,7 +83,53 @@ export default function TenderSimulator() {
     setScreeningData(null);
     setScreeningError('');
     setActivePreset(null);
+    setEngineerDecision('approve');
+    setEngineerNotes('');
+    setIsDecisionRecorded(false);
+    setRecordedAuditId(null);
+    setRecordedTimestamp(null);
   };
+
+
+  const handleExportJSON = () => {
+    const exportPayload = {
+      portal: 'NiryanaAI GeM-Style Procurement Simulator',
+      purpose: 'Demonstration and Evaluation Purposes Only',
+      tenderDocument: results?.documentName || 'tender_spec.txt',
+      analyzedClausesCount: results?.analyzedClauses || 0,
+      mappedStandards: allMatchedStandards.map(s => ({
+        isNumber: s.isNumber,
+        title: s.title,
+        confidenceScore: s.score
+      })),
+      complianceScreening: screeningData || {
+        status: 'PENDING_SCREENING',
+        note: 'Vendor test evidence screening not performed'
+      },
+      engineerReview: {
+        officer: user?.username || 'Procurement Officer',
+        role: user?.role || 'user',
+        decision: engineerDecision,
+        remarks: engineerNotes || 'Standard compliance verified.',
+        decisionTimestamp: new Date().toISOString()
+      },
+      regulatoryNotice: 'Generated via AI procurement screening simulator. For official procurement, cross-verify with BIS Gazette.',
+      auditTimestamp: new Date().toISOString()
+    };
+
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `GeM_Compliance_Audit_${results?.documentName || 'tender'}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
 
   const runScreening = async (presetType) => {
     setActivePreset(presetType);
@@ -507,6 +567,215 @@ export default function TenderSimulator() {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* STEP 7: QUALIFIED ENGINEER REVIEW & PROCUREMENT DECISION */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 my-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <UserCheck className="text-primary" size={22} />
+              <div>
+                <h2 className="font-bold text-gray-800 text-lg">Qualified Engineer Review &amp; Procurement Decision</h2>
+                <p className="text-xs text-gray-500">
+                  Qualified Engineer / Department Authority reviews AI findings and evidence to record the final determination.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Decision Options */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+                  Procurement Determination
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('approve')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'approve'
+                        ? 'border-green-600 bg-green-50/80 ring-2 ring-green-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-green-800">
+                      <CheckCircle2 size={16} /> Approve
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Meets all required standards and lab criteria.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('conditional')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'conditional'
+                        ? 'border-amber-600 bg-amber-50/80 ring-2 ring-amber-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-amber-800">
+                      <AlertCircle size={16} /> Approve w/ Conditions
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Subject to revised calibration or NABL test proof.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('reject')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'reject'
+                        ? 'border-red-600 bg-red-50/80 ring-2 ring-red-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-red-800">
+                      <XCircle size={16} /> Reject Bid
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Failed mandatory BIS threshold limits.</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngineerDecision('retender')}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      engineerDecision === 'retender'
+                        ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-600 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-sm text-blue-800">
+                      <ClipboardList size={16} /> Seek Re-tender
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Specifications require scope re-evaluation.</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Remarks Textarea */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                  Official Technical Remarks &amp; Audit Trail Notes
+                </label>
+                <textarea
+                  rows={3}
+                  value={engineerNotes}
+                  disabled={isDecisionRecorded}
+                  onChange={e => setEngineerNotes(e.target.value)}
+                  placeholder="Enter engineer justification, verification caveats, or conditions for procurement approval..."
+                  className={`w-full border rounded-md p-2.5 text-xs font-sans focus:ring-primary focus:border-primary resize-none ${
+                    isDecisionRecorded ? 'bg-gray-100 text-gray-700 border-gray-200 cursor-not-allowed' : 'border-gray-300'
+                  }`}
+                />
+              </div>
+
+              {/* Record Decision Action / Status Banner */}
+              {!isDecisionRecorded ? (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleRecordDecision}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-blue-900 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all"
+                  >
+                    <Stamp size={16} /> 📝 Record &amp; Digitally Sign Determination
+                  </button>
+                  <span className="text-[11px] text-gray-500 italic">
+                    Stamps the decision with an immutable audit ID and locks the remarks for official export.
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-green-50 border-2 border-green-500/80 rounded-lg p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold shrink-0">
+                      <Lock size={18} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-xs uppercase tracking-wider text-green-900">
+                          Determination Finalized &amp; Locked
+                        </span>
+                        <span className="text-[11px] font-mono bg-white px-2 py-0.5 rounded border border-green-300 font-semibold text-green-800">
+                          {recordedAuditId}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-800 mt-0.5">
+                        Recorded verdict: <strong className="uppercase">{engineerDecision}</strong> by <strong>{user?.username || 'Procurement Officer'}</strong> on {recordedTimestamp}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDecisionRecorded(false)}
+                    className="text-xs text-green-800 hover:text-green-950 underline font-semibold shrink-0"
+                  >
+                    ✏️ Unlock / Modify
+                  </button>
+                </div>
+              )}
+
+
+              <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                <span>Signed as: <strong className="text-gray-800">{user?.username || 'Procurement Officer'}</strong> ({user?.role || 'user'})</span>
+                <span className="text-green-700 font-semibold flex items-center gap-1">
+                  <CheckCircle size={13} /> Digital Audit Trail Active
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 8: OUTPUTS & COMPLIANCE EXPORT */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div>
+              <h3 className="font-bold text-primary text-sm flex items-center gap-2">
+                <FileText size={18} /> Procurement Compliance Export (Outputs)
+              </h3>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Download machine-readable JSON audit trail or print the official GeM-style Compliance Sheet.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleExportJSON}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+              >
+                <Download size={14} /> Export JSON Audit
+              </button>
+
+              <button
+                onClick={handlePrint}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-primary hover:bg-blue-900 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+              >
+                <Printer size={14} /> Print / Save PDF Sheet
+              </button>
+            </div>
+          </div>
+
+          {/* KEY BENEFITS FOOTER (From Architecture Flowchart) */}
+          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 shadow-sm">
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+              Key System Benefits (Problem Statement #108)
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">🛡️ Correct IS</span>
+                <span className="text-[11px] text-gray-500">Ensures BIS compliance</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">⏱️ Early Risk Catch</span>
+                <span className="text-[11px] text-gray-500">Detects defects pre-award</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">💰 Quality Control</span>
+                <span className="text-[11px] text-gray-500">Improves public spend</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100">
+                <span className="block text-primary font-semibold mb-0.5">👷 Decision Support</span>
+                <span className="text-[11px] text-gray-500">Empowers engineers</span>
+              </div>
+              <div className="p-2 bg-gray-50 rounded border border-gray-100 col-span-2 sm:col-span-1">
+                <span className="block text-primary font-semibold mb-0.5">🏛️ Public Safety</span>
+                <span className="text-[11px] text-gray-500">Stronger infrastructure</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

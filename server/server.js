@@ -152,7 +152,9 @@ app.post('/api/screen-compliance', authenticateToken, async (req, res) => {
         const reqStr = String(p.requiredValue).toLowerCase().trim();
         const propStr = String(p.proposedValue || '').toLowerCase().trim();
         isPassing = propStr.includes(reqStr) || propStr === 'yes' || propStr === 'valid' || propStr === 'active';
-        if (!isPassing && (propStr === 'pending' || propStr === 'under renewal')) isBorderline = true;
+        if (!isPassing && (propStr.includes('pending') || propStr.includes('renewal') || propStr.includes('provisional'))) {
+          isBorderline = true;
+        }
       }
 
       return {
@@ -488,8 +490,81 @@ app.post('/api/recommend', optionalAuth, async (req, res) => {
       return res.status(503).json({ error: 'AI model is still loading, please try again in a few seconds.' });
     }
 
-    const output = await extractor(query, { pooling: 'mean', normalize: true });
+    // Multilingual support: Translate Indic / non-ASCII queries into English technical terms for higher cross-lingual accuracy
+    let effectiveQuery = query;
+    if (/[^\u0000-\u007F]/.test(query)) {
+      let translated = false;
+      const model = getGeminiModel();
+      if (model) {
+        try {
+          const transPromise = model.generateContent(`Translate this Indian procurement or engineering query into concise English technical terms for search: "${query}". Output ONLY the English translation, no other text.`);
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Translation timeout')), 2500));
+          const transResult = await Promise.race([transPromise, timeoutPromise]);
+          const transText = transResult.response.text().trim().replace(/^["']|["']$/g, '');
+          if (transText && !/[^\u0000-\u007F]/.test(transText)) {
+            effectiveQuery = transText;
+            translated = true;
+          }
+        } catch (e) {
+          console.warn('Multilingual query translation fallback:', e.message);
+        }
+      }
+
+      // Offline dictionary fallback for common Indic procurement keywords
+      if (!translated) {
+        const indicTerms = {
+          'पोर्टलैंड सीमेंट': 'Portland cement',
+          'सीमेंट': 'cement',
+          'कंक्रीट': 'concrete',
+          'निर्माण': 'construction',
+          'इस्पात': 'steel',
+          'स्टील': 'steel',
+          'सरिया': 'tmt rebar steel',
+          'पाइप': 'pipe',
+          'नल': 'pipe',
+          'तार': 'wire',
+          'केबल': 'cable',
+          'ईंट': 'brick',
+          'रेत': 'sand',
+          'बालू': 'sand',
+          'बजरी': 'aggregate gravel',
+          'पुल': 'bridge',
+          'सड़क': 'road highway',
+          'बिटुमेन': 'bitumen asphalt',
+          'डामर': 'bitumen asphalt',
+          'पेंट': 'paint coating',
+          'रंग': 'paint',
+          'कांच': 'glass',
+          'लकड़ी': 'timber wood',
+          'इमारती लकड़ी': 'timber wood',
+          'ट्रांसफार्मर': 'transformer',
+          'मोटर': 'motor',
+          'वाल्व': 'valve',
+          'जल': 'water',
+          'पानी': 'water supply',
+          'सुरक्षा': 'safety protective',
+          'हेलमेट': 'industrial safety helmet',
+          'जूते': 'safety footwear shoes',
+          'दस्ताने': 'safety gloves',
+          'बिजली': 'electrical power',
+          'सौर': 'solar photovoltaic',
+          'पंप': 'water pump',
+          'अग्निशामक': 'fire extinguisher'
+        };
+        let mapped = query;
+        for (const [hi, en] of Object.entries(indicTerms)) {
+          mapped = mapped.replaceAll(hi, en);
+        }
+        const cleaned = mapped.replace(/[^\x00-\x7F]+/g, ' ').replace(/\s+/g, ' ').trim();
+        if (cleaned.length > 0) {
+          effectiveQuery = cleaned;
+        }
+      }
+    }
+
+    const output = await extractor(effectiveQuery, { pooling: 'mean', normalize: true });
     const queryEmbedding = Array.from(output.data);
+
 
     const allStandards = await Standard.find();
     const ranked = allStandards.map(std => {
