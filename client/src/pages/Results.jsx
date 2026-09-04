@@ -23,6 +23,38 @@ const CopyButton = ({ text }) => {
   );
 };
 
+const ConfidenceMeter = ({ score, showLabel = true }) => {
+  const percent = (score * 100).toFixed(0);
+  let colorClass = 'text-yellow-700';
+  let barClass = 'bg-yellow-400';
+  let label = 'Low Confidence';
+  
+  if (score >= 0.75) {
+    colorClass = 'text-green-700';
+    barClass = 'bg-green-500';
+    label = 'High Confidence';
+  } else if (score >= 0.50) {
+    colorClass = 'text-blue-700';
+    barClass = 'bg-blue-500';
+    label = 'Moderate Match';
+  }
+
+  return (
+    <div className="flex flex-col gap-1 w-24 shrink-0 ml-auto">
+      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+        <span className={colorClass}>{showLabel ? label : 'Match'}</span>
+        <span className={colorClass}>{percent}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className={`h-full ${barClass} transition-all duration-1000 ease-out`} 
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
 export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -320,9 +352,7 @@ export default function Results() {
                     </Link>
                     <CopyButton text={std.isNumber} />
                   </div>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {(std.similarityScore * 100).toFixed(0)}% match
-                  </span>
+                  <ConfidenceMeter score={std.similarityScore} showLabel={false} />
                 </div>
                 <p className="text-sm text-gray-800 font-medium mb-2 truncate" title={std.title}>{std.title}</p>
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">

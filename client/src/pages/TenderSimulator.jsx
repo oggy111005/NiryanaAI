@@ -30,10 +30,37 @@ const CopyButton = ({ text }) => {
 };
 
 const CONFIDENCE_LABELS = [
-  { min: 0.75, label: 'High Confidence', color: 'text-green-700 bg-green-100 border-green-300' },
-  { min: 0.50, label: 'Moderate Confidence', color: 'text-blue-700 bg-blue-100 border-blue-300' },
-  { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300' },
+  { min: 0.75, label: 'High Confidence', color: 'text-green-700 bg-green-100 border-green-300', bar: 'bg-green-500' },
+  { min: 0.50, label: 'Moderate Confidence', color: 'text-blue-700 bg-blue-100 border-blue-300', bar: 'bg-blue-500' },
+  { min: 0.35, label: 'Low Confidence', color: 'text-yellow-700 bg-yellow-100 border-yellow-300', bar: 'bg-yellow-400' },
 ];
+
+function getConfidenceLabel(score) {
+  for (const band of CONFIDENCE_LABELS) {
+    if (score >= band.min) return band;
+  }
+  return { label: 'Uncertain', color: 'text-gray-600 bg-gray-100 border-gray-300', bar: 'bg-gray-400' };
+}
+
+const ConfidenceMeter = ({ score }) => {
+  const conf = getConfidenceLabel(score);
+  const percent = (score * 100).toFixed(0);
+  
+  return (
+    <div className="flex flex-col gap-1 w-32 shrink-0 ml-auto">
+      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+        <span className={conf.color.split(' ')[0]}>{conf.label}</span>
+        <span className={conf.color.split(' ')[0]}>{percent}%</span>
+      </div>
+      <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className={`h-full ${conf.bar} transition-all duration-1000 ease-out`} 
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+};
 
 const TENDER_SCENARIOS = {
   bridge: {
@@ -81,12 +108,7 @@ Before final commissioning, the water running through the pipes must be tested f
   }
 };
 
-function getConfidenceLabel(score) {
-  for (const band of CONFIDENCE_LABELS) {
-    if (score >= band.min) return band;
-  }
-  return { label: 'Uncertain', color: 'text-gray-600 bg-gray-100 border-gray-300' };
-}
+
 
 export default function TenderSimulator() {
   const { user } = useAuth();
@@ -648,9 +670,7 @@ export default function TenderSimulator() {
                       <CopyButton text={std.isNumber} />
                     </div>
                     <span className="text-gray-700 text-sm">{std.title}</span>
-                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded border ${getConfidenceLabel(std.score).color}`}>
-                      {getConfidenceLabel(std.score).label}
-                    </span>
+                    <ConfidenceMeter score={std.score} />
                   </li>
                 ))}
               </ul>
@@ -1041,9 +1061,7 @@ export default function TenderSimulator() {
                                   </div>
                                   <p className="text-xs text-gray-600 truncate">{std.title}</p>
                                 </div>
-                                <span className={`text-xs font-semibold px-2 py-0.5 rounded border shrink-0 ${conf.color}`}>
-                                  {(std.score * 100).toFixed(0)}% — {conf.label}
-                                </span>
+                                <ConfidenceMeter score={std.score} />
                               </li>
                             );
                           })}
