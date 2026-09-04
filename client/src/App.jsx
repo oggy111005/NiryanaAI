@@ -39,7 +39,10 @@ const Navigation = () => {
             
             <div className="hidden md:flex space-x-4">
               {user && (
-                <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Search</Link>
+                <>
+                  <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Search</Link>
+                  <Link to="/tender" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">GeM Tender</Link>
+                </>
               )}
               
               {user?.role === 'user' && (
@@ -97,7 +100,7 @@ function AppRoutes() {
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
           <Route path="/standard/:id" element={<ProtectedRoute><Detail /></ProtectedRoute>} />
-
+          <Route path="/tender" element={<ProtectedRoute><TenderSimulator /></ProtectedRoute>} />
           {/* Role-specific Protected routes */}
           <Route path="/history" element={<ProtectedRoute requiredRole="user"><History /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
