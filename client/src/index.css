@@ -17,7 +17,7 @@ body {
  * Automatically inverts common hardcoded Tailwind classes
  * so we don't have to rewrite 50+ components with dark: prefixes
  */
-.dark body {
+html.dark, html.dark body {
   background-color: #0f172a;
   color: #f8fafc;
 }
@@ -30,10 +30,17 @@ body {
 .dark .border-gray-200,
 .dark .border-gray-300 { border-color: #334155 !important; }
 
+.dark .text-gray-900,
 .dark .text-gray-800,
 .dark .text-gray-700,
-.dark .text-gray-600 { color: #f1f5f9 !important; }
-.dark .text-gray-500 { color: #cbd5e1 !important; }
+.dark .text-gray-600,
+.dark .text-black { color: #f1f5f9 !important; }
+.dark .text-gray-500,
+.dark .text-gray-400 { color: #cbd5e1 !important; }
+
+/* Fix Primary and Secondary colors (they are too dark for dark mode) */
+.dark .text-primary { color: #93c5fd !important; } /* Light blue instead of deep blue */
+.dark .text-secondary { color: #5eead4 !important; } /* Light teal instead of dark teal */
 
 /* Status banners & badges */
 .dark .bg-green-50 { background-color: rgba(22, 101, 52, 0.2) !important; border-color: rgba(34, 197, 94, 0.3) !important; }

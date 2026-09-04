@@ -33,17 +33,17 @@ const DarkModeToggle = () => {
 
   React.useEffect(() => {
     // Check initial preference
-    if (document.body.classList.contains('dark')) {
+    if (document.documentElement.classList.contains('dark')) {
       setIsDark(true);
     }
   }, []);
 
   const toggle = () => {
     if (isDark) {
-      document.body.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
       setIsDark(false);
     } else {
-      document.body.classList.add('dark');
+      document.documentElement.classList.add('dark');
       setIsDark(true);
     }
   };
