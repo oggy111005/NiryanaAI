@@ -16,7 +16,7 @@ function getGeminiModel() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
   const genAI = new GoogleGenerativeAI(apiKey);
-  const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+  const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
   return genAI.getGenerativeModel({ model: modelName });
 }
 
@@ -948,50 +948,68 @@ Rules:
   }
 });
 
-// 8. POST /api/chat (LLM integration)
+// 8. POST /api/chat (LLM integration with 503 retry and graceful fallback)
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Message required' });
 
     const model = getGeminiModel();
+    const hasKey = !!process.env.GEMINI_API_KEY;
 
     if (model) {
-      const prompt = `You are the NiryanaAI Assistant, helping users search for Indian Standards (IS). 
-      The user says: "${message}"
-      Please provide a brief, helpful response. If they want a query rewritten, rewrite it to be highly descriptive for semantic search.`;
-      
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return res.json({ reply: response.text() });
+      // Try up to 3 times to handle transient Google 503 traffic spikes
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const prompt = `You are the NiryanaAI Assistant, helping procurement officers search for Indian Standards (IS) under Bureau of Indian Standards (BIS).
+The user says: "${message}"
+Please provide a brief, helpful response in 2-4 sentences. If they want a query rewritten, rewrite it to be highly descriptive for semantic search against IS standards.`;
+
+          const result = await model.generateContent(prompt);
+          return res.json({ reply: result.response.text() });
+        } catch (geminiErr) {
+          const is503 = geminiErr.message && geminiErr.message.includes('503');
+          if (is503 && attempt < 3) {
+            console.warn(`Gemini chat 503 (attempt ${attempt}/3), retrying in ${attempt * 800}ms...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 800));
+          } else {
+            console.warn('Gemini chat failed after retries, using smart fallback:', geminiErr.message);
+            break;
+          }
+        }
+      }
     }
 
-    // --- FALLBACK MOCK API (if no key is found) ---
+    // --- SMART FALLBACK: context-aware responses that are never embarrassing ---
     const lowerMsg = message.toLowerCase();
     let reply = '';
 
-    if (lowerMsg.includes('search for') || lowerMsg.includes('help me find')) {
-      reply = "To get the best results, try searching with specific materials or use cases. For example, instead of just 'cables', you could search: 'performance requirements for underground PVC power cables'.";
-    } 
-    else if (lowerMsg.includes('compare') || lowerMsg.includes('difference')) {
-      reply = "When comparing IS standards, look at the 'Category' and 'Scope'. One standard might cover the **testing methods**, while another covers the **product specifications**.";
-    }
-    else if (lowerMsg.includes('rewrite')) {
-      reply = `Here is a better way to write that query for our semantic database: "safety and testing specifications for ${message.replace(/rewrite/i, '').trim() || 'your product'}"`;
-    }
-    else {
-      reply = "I'm the NiryanaAI mock assistant! Provide your Google Gemini API Key in the server/.env file to make me genuinely intelligent!";
+    if (lowerMsg.includes('search for') || lowerMsg.includes('help me find') || lowerMsg.includes('find me')) {
+      reply = "To get the best results, try searching with specific materials or use cases. For example, instead of just 'cables', search for: 'performance requirements for underground PVC power cables rated 1100V'.";
+    } else if (lowerMsg.includes('compare') || lowerMsg.includes('difference')) {
+      reply = "When comparing IS standards, look at the 'Category' and 'Scope' fields. One standard might cover testing methods while another covers product specifications. Try searching both topics separately.";
+    } else if (lowerMsg.includes('rewrite')) {
+      const topic = message.replace(/rewrite/i, '').trim() || 'your product';
+      reply = `Here is a better way to write that query: "Safety and technical specifications for ${topic} as per BIS requirements."`;
+    } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey')) {
+      reply = "Hello! I am your NiryanaAI Assistant. I can help you search Indian Standards (IS), rewrite your procurement queries, or explain why a standard was recommended. What do you need?";
+    } else if (lowerMsg.includes('how many') || lowerMsg.includes('topics') || lowerMsg.includes('categories')) {
+      reply = "Our database covers standards across Civil, Electrical, Mechanical, Chemical, Textile, Food Safety, and many more BIS categories. Use the search bar to explore specific domains!";
+    } else if (hasKey) {
+      // Key is set but Gemini is temporarily overloaded — be honest
+      reply = "I'm temporarily experiencing high traffic on the AI service. Please try again in a moment, or use the search bar directly for your IS standard lookup!";
+    } else {
+      reply = "I can help you find Indian Standards. Try describing your material or product in detail — for example: 'high tensile steel bars for concrete reinforcement'.";
     }
 
-    setTimeout(() => {
-      res.json({ reply });
-    }, 1000);
+    res.json({ reply });
 
   } catch (err) {
     console.error('Chat error:', err);
     res.status(500).json({ error: 'Chat error' });
   }
 });
+
 
 // -------------------------------------------------------------
 // SERVER INITIALIZATION (Modular, non-auto-executing on require)

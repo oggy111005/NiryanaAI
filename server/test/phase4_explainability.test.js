@@ -26,10 +26,13 @@ if (!dbName.endsWith('-test')) {
 process.env.MONGODB_URI = TEST_DB_URI;
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'phase4-test-jwt-secret';
 
-// Ensure Gemini API Key is empty for predictable deterministic fallback tests
-delete process.env.GEMINI_API_KEY;
-
 const { app } = require('../server');
+
+// Ensure Gemini API Key is empty for predictable deterministic fallback tests
+// (Must be cleared AFTER require('../server') because server.js calls dotenv.config())
+delete process.env.GEMINI_API_KEY;
+process.env.GEMINI_API_KEY = '';
+
 
 let server;
 let baseUrl;
