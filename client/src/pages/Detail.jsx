@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import api from '../api';
+import api, { getCleanBisUrl } from '../api';
 import { ArrowLeft, Loader2, Bookmark, ExternalLink, CheckCircle, AlertCircle, Globe, FileText } from 'lucide-react';
 
 export default function Detail() {
@@ -154,7 +154,7 @@ export default function Detail() {
                       </div>
                       {c.sourceUrl && (
                         <a
-                          href={c.sourceUrl}
+                          href={getCleanBisUrl(c.sourceUrl, standard.isNumber)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-secondary hover:text-teal-800 hover:underline font-medium"
@@ -237,7 +237,7 @@ export default function Detail() {
                 <span className="block text-gray-500 mb-1">Official Source</span>
                 {standard.sourceUrl ? (
                   <a
-                    href={standard.sourceUrl}
+                    href={getCleanBisUrl(standard.sourceUrl, standard.isNumber)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-secondary hover:text-teal-800 text-xs font-semibold bg-teal-50 border border-teal-200 px-2.5 py-1.5 rounded transition-colors hover:underline"

@@ -26,4 +26,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+/**
+ * Ensures a BIS source URL routes reliably to the official working
+ * Government of India BIS portal (bis.gov.in) rather than crashing on
+ * broken legacy vendor portals like standardsbis.bsbedge.com.
+ */
+export function getCleanBisUrl(url, isNumber) {
+  if (!url || url.includes('standardsbis.bsbedge.com')) {
+    const q = isNumber ? encodeURIComponent(isNumber) : 'Indian%20Standard';
+    return `https://www.bis.gov.in/?s=${q}`;
+  }
+  return url;
+}
+
 export default api;

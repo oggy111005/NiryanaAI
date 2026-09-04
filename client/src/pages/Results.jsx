@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import api from '../api';
+import api, { getCleanBisUrl } from '../api';
 import { ArrowLeft, CheckCircle, Shield, FileText, Search, Lightbulb, ChevronDown, ChevronUp, Loader2, ExternalLink, BookOpen } from 'lucide-react';
 
 export default function Results() {
@@ -195,7 +195,7 @@ export default function Results() {
                                 </div>
                                 {cit.sourceUrl && (
                                   <a
-                                    href={cit.sourceUrl}
+                                    href={getCleanBisUrl(cit.sourceUrl, cit.clauseId || primary.isNumber)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 text-primary hover:text-blue-800 font-semibold hover:underline text-xs"
@@ -290,7 +290,7 @@ export default function Results() {
                   <span>Category: {std.category}</span>
                   {std.sourceUrl && (
                     <a
-                      href={std.sourceUrl}
+                      href={getCleanBisUrl(std.sourceUrl, std.isNumber)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-secondary hover:underline inline-flex items-center gap-1 font-medium"
