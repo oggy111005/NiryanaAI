@@ -17,14 +17,17 @@ const seedData = [
     category: "Cement",
     scope: "This standard covers the manufacture and chemical and physical requirements of ordinary Portland cement (OPC) of 33, 43 and 53 grades.",
     latestVersion: "2015",
-    amendments: ["Amendment 1 - 2017", "Amendment 2 - 2019"],
     alliedStandards: [
       { isNumber: "IS 4031", title: "Methods of physical tests for hydraulic cement", type: "Test Method" },
       { isNumber: "IS 4032", title: "Method of chemical analysis of hydraulic cement", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+269",
-    verifiedDate: new Date("2024-01-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("2015-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2023)"],
+    verifiedDate: new Date("2026-09-04T20:52:50.139Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -58,14 +61,17 @@ const seedData = [
     category: "Steel",
     scope: "Specifies requirements for high strength deformed steel bars and wires for concrete reinforcement, covering grades Fe 415, Fe 415D, Fe 500, Fe 500D, Fe 550, Fe 550D and Fe 600.",
     latestVersion: "2008",
-    amendments: ["Amendment 1 - 2012"],
     alliedStandards: [
       { isNumber: "IS 226", title: "Structural steel", type: "Related Product" },
       { isNumber: "IS 2062", title: "Hot rolled medium and high tensile structural steel", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1786",
-    verifiedDate: new Date("2024-01-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("2008-05-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    amendments: ["First Amendment (2012)","Second Amendment (2013)","Third Amendment (2017)","Fourth Amendment (2019)"],
+    verifiedDate: new Date("2026-09-04T20:52:51.205Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -99,13 +105,16 @@ const seedData = [
     category: "Electrical Appliances",
     scope: "Deals with the safety of electrical appliances for household and similar purposes, their rated voltage being not more than 250 V for single-phase appliances and 415 V for other appliances.",
     latestVersion: "2008",
-    amendments: ["Amendment 1 - 2013", "Amendment 2 - 2015"],
     alliedStandards: [
       { isNumber: "IS 1293", title: "Plugs and socket-outlets of rated voltage up to and including 250 volts", type: "Safety" }
     ],
     certifications: ["BIS ISI Mark", "CRS"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+302-1",
-    verifiedDate: new Date("2024-01-20T00:00:00.000Z"),
+    
+    publishedOn: new Date("2008-08-31T00:00:00.000Z"),
+    latestReviewedYear: 2016,
+    amendments: ["First Amendment (2009)","Second Amendment (2013)","Third Amendment (2014)","Fourth Amendment (2015)"],
+    verifiedDate: new Date("2026-09-04T20:52:52.905Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -139,14 +148,17 @@ const seedData = [
     category: "LED Lighting",
     scope: "Specifies the safety and interchangeability requirements, together with the test methods and conditions, required to show compliance of LED-lamps with integrated means for stable operation.",
     latestVersion: "2012",
-    amendments: [],
     alliedStandards: [
       { isNumber: "IS 16102(Part 2)", title: "Self-Ballasted LED Lamps - Performance Requirements", type: "Test Method" },
       { isNumber: "IS 16103", title: "LED Modules for General Lighting", type: "Related Product" }
     ],
     certifications: ["CRS"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+16102(Part+1)",
-    verifiedDate: new Date("2024-02-01T00:00:00.000Z"),
+    
+    publishedOn: new Date("2012-02-28T00:00:00.000Z"),
+    latestReviewedYear: 2024,
+    amendments: ["First Amendment (2015)","Second Amendment (2015)","Third Amendment (2020)"],
+    verifiedDate: new Date("2026-09-04T20:52:54.006Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -180,7 +192,10 @@ const seedData = [
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15822",
-    verifiedDate: new Date("2024-02-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("2008-09-30T00:00:00.000Z"),
+    latestReviewedYear: 2022,
+    verifiedDate: new Date("2026-09-04T20:52:54.943Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -214,7 +229,10 @@ const seedData = [
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+16982",
-    verifiedDate: new Date("2024-03-01T00:00:00.000Z"),
+    
+    publishedOn: new Date("2018-06-30T00:00:00.000Z"),
+    latestReviewedYear: 2024,
+    verifiedDate: new Date("2026-09-04T20:52:55.938Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -249,7 +267,10 @@ const seedData = [
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+9873(Part+1)",
-    verifiedDate: new Date("2024-03-10T00:00:00.000Z"),
+    
+    publishedOn: new Date("2019-06-30T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    verifiedDate: new Date("2026-09-04T20:52:56.938Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -277,13 +298,16 @@ const seedData = [
     category: "Helmets",
     scope: "Specifies the requirements regarding the material, construction, workmanship, finish, and performance for protective helmets for everyday use by two wheeler riders.",
     latestVersion: "2015",
-    amendments: ["Amendment 1 - 2020"],
     alliedStandards: [
       { isNumber: "IS 2553(Part 2)", title: "Safety glass for road vehicles", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+4151",
-    verifiedDate: new Date("2024-03-25T00:00:00.000Z"),
+    
+    publishedOn: new Date("2015-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2018)","Second Amendment (2020)"],
+    verifiedDate: new Date("2026-09-04T20:52:58.020Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -311,11 +335,14 @@ const seedData = [
     category: "Electrical",
     scope: "Specifies requirements and tests for porcelain insulators for overhead power lines with a nominal voltage up to and including 1000 V.",
     latestVersion: "1977",
-    amendments: [],
     alliedStandards: [],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1445",
-    verifiedDate: new Date("2024-04-05T00:00:00.000Z"),
+    
+    publishedOn: new Date("1977-05-31T00:00:00.000Z"),
+    latestReviewedYear: 2026,
+    amendments: ["First Amendment (1979)","Second Amendment (1979)","Third Amendment (1981)","Fourth Amendment (1991)","Fifth Amendment (1993)"],
+    verifiedDate: new Date("2026-09-04T20:52:59.208Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -343,13 +370,16 @@ const seedData = [
     category: "Electrical Appliances",
     scope: "Specifies the requirements and methods of tests for electric ceiling type fans and their associated regulators intended for use on single-phase ac circuits at voltages not exceeding 250 V.",
     latestVersion: "2019",
-    amendments: [],
     alliedStandards: [
       { isNumber: "IS 1169", title: "Electric pedestal type fans and regulators", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+374",
-    verifiedDate: new Date("2024-04-18T00:00:00.000Z"),
+    
+    publishedOn: new Date("2019-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    amendments: ["First Amendment (2022)"],
+    verifiedDate: new Date("2026-09-04T20:53:00.191Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -378,14 +408,17 @@ const seedData = [
     category: "Roads & Highways",
     scope: "Specifies requirements for paving bitumen derived from petroleum, used for road construction, airfield pavements and other paving applications. Covers viscosity grades VG-10, VG-20, VG-30 and VG-40.",
     latestVersion: "2013",
-    amendments: [],
     alliedStandards: [
       { isNumber: "IS 217", title: "Cutback bitumen", type: "Related Product" },
       { isNumber: "IS 1205", title: "Methods for testing tar and bituminous materials", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+73",
-    verifiedDate: new Date("2024-03-01T00:00:00.000Z"),
+    
+    publishedOn: new Date("2013-04-30T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2019)","Second Amendment (2023)","Third Amendment (2024)","Fourth Amendment (2026)"],
+    verifiedDate: new Date("2026-09-04T20:53:01.277Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -413,14 +446,16 @@ const seedData = [
     category: "Civil Engineering",
     scope: "Specifies requirements for coarse and fine aggregates obtained by crushing natural stone, gravel, slag, or manufactured from sand for use in concrete. Includes crushed stone, gravel, and natural sand.",
     latestVersion: "2016",
-    amendments: [],
     alliedStandards: [
       { isNumber: "IS 2386", title: "Methods of test for aggregates for concrete", type: "Test Method" },
       { isNumber: "IS 516", title: "Method of test for strength of concrete", type: "Test Method" }
     ],
     certifications: [],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+383",
-    verifiedDate: new Date("2024-03-10T00:00:00.000Z"),
+    
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2017)","Second Amendment (2019)"],
+    verifiedDate: new Date("2026-09-04T20:53:03.333Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -448,7 +483,6 @@ const seedData = [
     category: "Civil Engineering",
     scope: "Covers the general structural use of plain and reinforced concrete. Deals with materials, workmanship, inspection and testing of concrete structures. Applicable to buildings, bridges and all civil structures.",
     latestVersion: "2000",
-    amendments: ["Amendment 1 - 2005", "Amendment 2 - 2013", "Amendment 3 - 2019"],
     alliedStandards: [
       { isNumber: "IS 269", title: "Ordinary Portland Cement", type: "Material" },
       { isNumber: "IS 1786", title: "High strength deformed steel bars", type: "Material" },
@@ -456,7 +490,11 @@ const seedData = [
     ],
     certifications: [],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+456",
-    verifiedDate: new Date("2024-03-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("2000-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2001)","Second Amendment (2005)","Third Amendment (2007)","Fourth Amendment (2013)","Fifth Amendment (2019)","Sixth Amendment (2024)"],
+    verifiedDate: new Date("2026-09-04T20:53:05.537Z"),
     clauses: [
       {
         clauseNumber: "6.1",
@@ -484,14 +522,17 @@ const seedData = [
     category: "Pipes & Plumbing",
     scope: "Specifies requirements for mild steel tubes in light, medium and heavy classes for water, gas and steam services. Also covers threaded fittings for use with mild steel tubes.",
     latestVersion: "2004",
-    amendments: ["Amendment 1 - 2009"],
     alliedStandards: [
       { isNumber: "IS 1239(Part 2)", title: "Mild Steel Tubulars and Fittings", type: "Related Product" },
       { isNumber: "IS 3589", title: "Steel pipes for water and sewage", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1239",
-    verifiedDate: new Date("2024-03-20T00:00:00.000Z"),
+    
+    publishedOn: new Date("2018-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2024,
+    amendments: ["First Amendment (2005)","Second Amendment (2007)","Third Amendment (2008)","Fourth Amendment (2010)"],
+    verifiedDate: new Date("2026-09-04T20:53:11.935Z"),
     clauses: [
       {
         clauseNumber: "1.1",
@@ -867,6 +908,308 @@ const seedData = [
         text: "Occupational safety and health audit shall cover physical work environment, work processes, emergency preparedness, PPE adequacy, and statutory compliance with Factories Act.",
         sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+14489#clause-4.1"
       }
+    ]
+  },
+    {
+    isNumber: "IS 15658:2006",
+    title: "Precast Concrete Blocks for Paving - Specification",
+    category: "Road Construction",
+    scope: "Specifies requirements for precast concrete paver blocks for road pavements, footpaths, pedestrian areas, parking lots, industrial driveways, highway shoulders and bus terminals.",
+    latestVersion: "2006",
+    latestReviewedYear: 2017,
+    amendments: ["Amendment 1 - 2011"],
+    alliedStandards: [{"isNumber":"IS 269","title":"Ordinary Portland Cement","type":"Related Product","_id":"6a9b23c5b35cdefdc2d07030"},{"isNumber":"IS 383","title":"Coarse and fine aggregate for concrete","type":"Related Product","_id":"6a9b23c5b35cdefdc2d07031"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015658%3A2006",
+    verifiedDate: new Date("2026-09-04T20:53:02.282Z"),
+    clauses: [
+          {
+                "clauseNumber": "6.1",
+                "title": "Compressive Strength of Paving Blocks",
+                "text": "Average compressive strength of precast concrete paving blocks shall not be less than 30 MPa for pedestrian traffic and 50 MPa for heavy city roads and industrial traffic.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015658%3A2006#clause-6.1",
+                "_id": "6a9b23c5b35cdefdc2d07032"
+          },
+          {
+                "clauseNumber": "6.3",
+                "title": "Water Absorption and Abrasion Resistance",
+                "text": "Water absorption shall not exceed 6 percent by mass, and total wear in the abrasion test shall not exceed 2 mm for road paving applications.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015658%3A2006#clause-6.3",
+                "_id": "6a9b23c5b35cdefdc2d07033"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 1203:1978",
+    title: "Methods for Testing Tar and Bituminous Materials: Determination of Penetration",
+    category: "Road Construction",
+    scope: "Covers standard laboratory test method for determining the penetration of road bitumen and tar products, measuring consistency and grade hardness under specified load and temperature.",
+    latestVersion: "1978",
+    latestReviewedYear: 2018,
+    amendments: [],
+    alliedStandards: [{"isNumber":"IS 73","title":"Paving bitumen specification","type":"Related Product","_id":"6a9b23c5b35cdefdc2d07044"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%201203%3A1978",
+    verifiedDate: new Date("2026-09-04T20:53:04.389Z"),
+    clauses: [
+          {
+                "clauseNumber": "3.1",
+                "title": "Penetration Measurement Procedure",
+                "text": "Penetration is expressed as the distance in tenths of a millimeter that a standard needle vertically penetrates the bituminous sample under 100g load for 5 seconds at 25 °C.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%201203%3A1978#clause-3.1",
+                "_id": "6a9b23c5b35cdefdc2d07045"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 800:2007",
+    title: "General Construction in Steel - Code of Practice",
+    category: "Steel & Civil",
+    scope: "Code of practice for the design, fabrication and erection of structural steelwork in highway bridges, overpasses, industrial roof trusses, transmission towers and multistorey buildings.",
+    latestVersion: "2007",
+    publishedOn: new Date("2007-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2022,
+    amendments: ["First Amendment (2012)","Second Amendment (2024)"],
+    alliedStandards: [{"isNumber":"IS 2062","title":"Hot rolled medium and high tensile structural steel","type":"Related Product","_id":"6a9b23c5b35cdefdc2d07058"},{"isNumber":"IS 1786","title":"High strength deformed steel bars","type":"Related Product","_id":"6a9b23c5b35cdefdc2d07059"}],
+    certifications: ["BIS Certified Standard"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%20800%3A2007",
+    verifiedDate: new Date("2026-09-04T20:53:06.580Z"),
+    clauses: [
+          {
+                "clauseNumber": "5.1",
+                "title": "Structural Steel Material Properties",
+                "text": "All structural steel members shall conform to IS 2062. Design yield stress fy and ultimate tensile strength fu shall be verified from mill test certificates.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%20800%3A2007#clause-5.1",
+                "_id": "6a9b23c5b35cdefdc2d0705a"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 10262:2019",
+    title: "Concrete Mix Proportioning - Guidelines",
+    category: "Civil Construction",
+    scope: "Provides mathematical and engineering design guidelines for proportioning ordinary, standard, high-strength and self-compacting concrete mixes using target water-cement ratios.",
+    latestVersion: "2019",
+    publishedOn: new Date("2019-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    amendments: [],
+    alliedStandards: [{"isNumber":"IS 456","title":"Plain and reinforced concrete code","type":"Design Code","_id":"6a9b23c5b35cdefdc2d07062"}],
+    certifications: ["BIS Certified Standard"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2010262%3A2019",
+    verifiedDate: new Date("2026-09-04T20:53:07.577Z"),
+    clauses: [
+          {
+                "clauseNumber": "4.2",
+                "title": "Target Mean Strength Calculation",
+                "text": "Target mean compressive strength f'ck = fck + 1.65 x s, where s is standard deviation according to Table 1 based on quality control level.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2010262%3A2019#clause-4.2",
+                "_id": "6a9b23c5b35cdefdc2d07063"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 1077:1992",
+    title: "Common Burnt Clay Building Bricks - Specification",
+    category: "Civil Construction",
+    scope: "Specifies dimensions, compressive strength classes (3.5 to 35 N/mm²), water absorption and efflorescence limits for common burnt clay masonry bricks.",
+    latestVersion: "1992",
+    publishedOn: new Date("1992-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["First Amendment (2008)"],
+    alliedStandards: [{"isNumber":"IS 3495","title":"Methods of tests of burnt clay building bricks","type":"Test Method","_id":"6a9b23c6b35cdefdc2d07069"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%201077%3A1992",
+    verifiedDate: new Date("2026-09-04T20:53:08.608Z"),
+    clauses: [
+          {
+                "clauseNumber": "7.1",
+                "title": "Compressive Strength of Bricks",
+                "text": "Common burnt clay building bricks shall have minimum compressive strength of 3.5 N/mm² for class 3.5 up to 35 N/mm² for class 35.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%201077%3A1992#clause-7.1",
+                "_id": "6a9b23c6b35cdefdc2d0706a"
+          },
+          {
+                "clauseNumber": "7.2",
+                "title": "Water Absorption Limits",
+                "text": "Water absorption shall not be more than 20 percent by weight for bricks up to class 12.5 and 15 percent for higher classes after 24 hours cold water immersion.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%201077%3A1992#clause-7.2",
+                "_id": "6a9b23c6b35cdefdc2d0706b"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 4984:2016",
+    title: "High Density Polyethylene (HDPE) Pipes for Water Supply - Specification",
+    category: "Piping & Water Supply",
+    scope: "Covers requirements for high density polyethylene (HDPE) pressure pipes (PE 63, PE 80, PE 100) intended for municipal drinking water supply, rural water projects, and industrial lines.",
+    latestVersion: "2016",
+    publishedOn: new Date("2016-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2026,
+    amendments: ["First Amendment (2018)","Second Amendment (2022)"],
+    alliedStandards: [{"isNumber":"IS 2530","title":"Methods of test for polyethylene molding materials","type":"Test Method","_id":"6a9b23c6b35cdefdc2d07073"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%204984%3A2016",
+    verifiedDate: new Date("2026-09-04T20:53:09.694Z"),
+    clauses: [
+          {
+                "clauseNumber": "5.1",
+                "title": "Raw Material Grade PE 100",
+                "text": "HDPE pipe shall be manufactured from carbon black compound PE 100 with minimum required strength (MRS) of 10.0 MPa at 20 °C for 50 years design life.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%204984%3A2016#clause-5.1",
+                "_id": "6a9b23c6b35cdefdc2d07074"
+          },
+          {
+                "clauseNumber": "8.1",
+                "title": "Hydrostatic Pressure Resistance",
+                "text": "The pipe shall not burst or weep when subjected to internal hydrostatic pressure test for 100 hours at 80 °C and 165 hours at 80 °C.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%204984%3A2016#clause-8.1",
+                "_id": "6a9b23c6b35cdefdc2d07075"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 8329:2000",
+    title: "Centrifugally Cast (Ductile Iron) Pipes for Water, Gas and Sewage - Specification",
+    category: "Piping & Water Supply",
+    scope: "Specifies requirements for centrifugally cast ductile iron (DI) pressure pipes with socket and spigot ends, socket type Class K7, K9 and K12 for potable water and underground sewage lines.",
+    latestVersion: "2000",
+    publishedOn: new Date("2000-02-28T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2001)","Second Amendment (2012)","Third Amendment (2014)","Fourth Amendment (2016)","Fifth Amendment (2019)","Sixth Amendment (2025)"],
+    alliedStandards: [{"isNumber":"IS 12288","title":"Code of practice for use and laying of ductile iron pipes","type":"Installation Code","_id":"6a9b23c6b35cdefdc2d0707d"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%208329%3A2000",
+    verifiedDate: new Date("2026-09-04T20:53:10.821Z"),
+    clauses: [
+          {
+                "clauseNumber": "9.1",
+                "title": "Tensile Strength and Elongation of DI Pipes",
+                "text": "Minimum tensile strength of centrifugally cast ductile iron pipe body shall be 420 MPa, with minimum elongation at break of 10 percent.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%208329%3A2000#clause-9.1",
+                "_id": "6a9b23c6b35cdefdc2d0707e"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 694:2010",
+    title: "Polyvinyl Chloride Insulated Unsheathed and Sheathed Cables up to 1100 V - Specification",
+    category: "Electrical Infrastructure",
+    scope: "Requirements for PVC insulated single-core and multi-core copper/aluminium electrical cables and flexible cords for building wiring, power distribution and lighting up to 1100 V.",
+    latestVersion: "2010",
+    publishedOn: new Date("2011-05-31T00:00:00.000Z"),
+    latestReviewedYear: 2020,
+    amendments: ["First Amendment (2012)","Second Amendment (2014)","Third Amendment (2015)","Fourth Amendment (2020)"],
+    alliedStandards: [{"isNumber":"IS 8130","title":"Conductors for insulated electric cables","type":"Related Standard","_id":"6a9b23c6b35cdefdc2d0708b"},{"isNumber":"IS 5831","title":"PVC insulation and sheath of electric cables","type":"Related Standard","_id":"6a9b23c6b35cdefdc2d0708c"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%20694%3A2010",
+    verifiedDate: new Date("2026-09-04T20:53:13.031Z"),
+    clauses: [
+          {
+                "clauseNumber": "6.1",
+                "title": "Conductor Resistance and Annealed Copper",
+                "text": "Conductors shall consist of plain annealed high-conductivity copper wires complying with IS 8130. Maximum electrical resistance shall not exceed specified table limits.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%20694%3A2010#clause-6.1",
+                "_id": "6a9b23c6b35cdefdc2d0708d"
+          },
+          {
+                "clauseNumber": "9.2",
+                "title": "High Voltage Spark Test",
+                "text": "Cables shall withstand a high voltage spark test of 6 kV AC RMS without insulation breakdown.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%20694%3A2010#clause-9.2",
+                "_id": "6a9b23c6b35cdefdc2d0708e"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 7098(Part 1):1988",
+    title: "Crosslinked Polyethylene Insulated Thermoplastic Sheathed Cables up to 1100 V",
+    category: "Electrical Infrastructure",
+    scope: "Covers requirements for armoured and unarmoured XLPE insulated heavy-duty electrical cables for power transmission, street lighting, industrial power networks and substations.",
+    latestVersion: "1988",
+    publishedOn: new Date("1990-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["First Amendment (1994)","Second Amendment (2007)","Third Amendment (2007)","Fourth Amendment (2011)","Fifth Amendment (2012)"],
+    alliedStandards: [{"isNumber":"IS 3975","title":"Low carbon galvanized steel wires for armouring cables","type":"Related Standard","_id":"6a9b23c6b35cdefdc2d07098"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%207098(Part%201)%3A1988",
+    verifiedDate: new Date("2026-09-04T20:53:14.115Z"),
+    clauses: [
+          {
+                "clauseNumber": "15.1",
+                "title": "Armour Resistance and Mechanical Protection",
+                "text": "Armouring shall consist of galvanized steel strip or round wire providing complete mechanical protection against soil and mechanical compaction.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%207098(Part%201)%3A1988#clause-15.1",
+                "_id": "6a9b23c6b35cdefdc2d07099"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 14286:2010",
+    title: "Crystalline Silicon Terrestrial Photovoltaic (PV) Modules - Design Qualification and Type Approval",
+    category: "Renewable Energy & Solar",
+    scope: "Specifies requirements for design qualification and type approval of terrestrial crystalline silicon solar photovoltaic (PV) modules suitable for prolonged outdoor climate operation.",
+    latestVersion: "2010",
+    publishedOn: new Date("2010-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: [],
+    alliedStandards: [{"isNumber":"IS/IEC 61730-1","title":"Photovoltaic module safety qualification","type":"Safety Standard","_id":"6a9b23c6b35cdefdc2d0709f"}],
+    certifications: ["BIS CRS Mark","MNRE Approved"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2014286%3A2010",
+    verifiedDate: new Date("2026-09-04T20:53:15.108Z"),
+    clauses: [
+          {
+                "clauseNumber": "10.11",
+                "title": "Thermal Cycling and Damp Heat Testing",
+                "text": "Solar PV modules shall undergo 200 thermal cycles (-40 °C to +85 °C) and 1000 hours damp heat test at 85 °C / 85% RH with power degradation less than 5 percent.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2014286%3A2010#clause-10.11",
+                "_id": "6a9b23c6b35cdefdc2d070a0"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 15683:2018",
+    title: "Portable Fire Extinguishers - Performance and Construction - Specification",
+    category: "Fire Safety",
+    scope: "Specifies requirements for design, construction, hydraulic pressure testing, and fire extinguishing rating of portable fire extinguishers (ABC powder, CO2, water, foam).",
+    latestVersion: "2018",
+    publishedOn: new Date("2018-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    amendments: ["First Amendment (2024)"],
+    alliedStandards: [{"isNumber":"IS 4947","title":"Gas cartridges for use in fire extinguishers","type":"Related Product","_id":"6a9b23c6b35cdefdc2d070a6"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015683%3A2018",
+    verifiedDate: new Date("2026-09-04T20:53:16.102Z"),
+    clauses: [
+          {
+                "clauseNumber": "6.2",
+                "title": "Burst Pressure and Hydraulic Test",
+                "text": "The cylinder body of the extinguisher shall withstand hydraulic test pressure of 3.0 MPa for minimum 30 seconds without leakage or distortion.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015683%3A2018#clause-6.2",
+                "_id": "6a9b23c6b35cdefdc2d070a7"
+          }
+    ]
+  },
+  {
+    isNumber: "IS 15298(Part 2):2016",
+    title: "Personal Protective Equipment - Part 2: Safety Footwear - Specification",
+    category: "Safety PPE",
+    scope: "Specifies basic and additional requirements for safety footwear used in industrial, civil construction and airport environments, including steel toe-cap impact resistance and penetration resistance.",
+    latestVersion: "2016",
+    publishedOn: new Date("2016-11-30T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["Amendment 1 - 2019"],
+    alliedStandards: [{"isNumber":"IS 15298(Part 1)","title":"Test methods for footwear","type":"Test Method","_id":"6a9b23c6b35cdefdc2d070ad"}],
+    certifications: ["BIS ISI Mark"],
+    sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015298(Part%202)%3A2016",
+    verifiedDate: new Date("2026-09-04T20:53:17.097Z"),
+    clauses: [
+          {
+                "clauseNumber": "5.3",
+                "title": "Toe Protection Impact Resistance",
+                "text": "Safety footwear toe caps shall withstand an impact energy of minimum 200 Joules and compression load of 15 kN with clearance under the cap meeting Table 4.",
+                "sourceUrl": "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS%2015298(Part%202)%3A2016#clause-5.3",
+                "_id": "6a9b23c6b35cdefdc2d070ae"
+          }
     ]
   },
   // ─── END OF ADDITIONAL REAL BIS STANDARDS ──────────────────────────────────

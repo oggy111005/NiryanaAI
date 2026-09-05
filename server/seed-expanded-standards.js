@@ -20,14 +20,17 @@ const newStandards = [
     category: "Road Construction",
     scope: "Covers the requirements for viscosity-graded paving bitumen (VG-10, VG-20, VG-30, VG-40) used for road construction, highway pavements, asphalt surfacing, tack coats and road wearing courses.",
     latestVersion: "2013",
-    amendments: ["Amendment 1 - 2018"],
     alliedStandards: [
       { isNumber: "IS 1203", title: "Determination of penetration of bituminous materials", type: "Test Method" },
       { isNumber: "IS 1205", title: "Determination of softening point of bitumen", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+73",
-    verifiedDate: new Date("2024-02-01T00:00:00.000Z"),
+    
+    publishedOn: new Date("2013-04-30T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2019)","Second Amendment (2023)","Third Amendment (2024)","Fourth Amendment (2026)"],
+    verifiedDate: new Date("2026-09-04T20:53:01.277Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -51,14 +54,16 @@ const newStandards = [
     category: "Road Construction",
     scope: "Specifies requirements for precast concrete paver blocks for road pavements, footpaths, pedestrian areas, parking lots, industrial driveways, highway shoulders and bus terminals.",
     latestVersion: "2006",
-    amendments: ["Amendment 1 - 2011"],
     alliedStandards: [
       { isNumber: "IS 269", title: "Ordinary Portland Cement", type: "Related Product" },
       { isNumber: "IS 383", title: "Coarse and fine aggregate for concrete", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15658",
-    verifiedDate: new Date("2024-01-10T00:00:00.000Z"),
+    
+    latestReviewedYear: 2017,
+    amendments: ["Amendment 1 - 2011"],
+    verifiedDate: new Date("2026-09-04T20:53:02.282Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -82,13 +87,15 @@ const newStandards = [
     category: "Road & Civil Materials",
     scope: "Covers requirements for crushed stone, gravel and sand aggregates used in road sub-base, base courses, wet mix macadam, structural concrete and highway pavements.",
     latestVersion: "2016",
-    amendments: ["Amendment 1 - 2021"],
     alliedStandards: [
       { isNumber: "IS 2386", title: "Methods of test for aggregates for concrete", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+383",
-    verifiedDate: new Date("2024-01-20T00:00:00.000Z"),
+    
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2017)","Second Amendment (2019)"],
+    verifiedDate: new Date("2026-09-04T20:53:03.333Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -112,7 +119,9 @@ const newStandards = [
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1203",
-    verifiedDate: new Date("2023-11-15T00:00:00.000Z"),
+    
+    latestReviewedYear: 2018,
+    verifiedDate: new Date("2026-09-04T20:53:04.389Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -132,14 +141,17 @@ const newStandards = [
     category: "Civil Construction",
     scope: "India's benchmark general structural design code for plain and reinforced concrete (RCC) in buildings, foundations, bridge decks, retaining walls and civil structures.",
     latestVersion: "2000",
-    amendments: ["Amendment 1 - 2001", "Amendment 2 - 2005", "Amendment 3 - 2007", "Amendment 4 - 2013", "Amendment 5 - 2019"],
     alliedStandards: [
       { isNumber: "IS 269", title: "Ordinary Portland Cement", type: "Related Product" },
       { isNumber: "IS 1786", title: "High strength deformed steel bars", type: "Related Product" }
     ],
     certifications: ["BIS Certified Standard"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+456",
-    verifiedDate: new Date("2024-01-10T00:00:00.000Z"),
+    
+    publishedOn: new Date("2000-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2001)","Second Amendment (2005)","Third Amendment (2007)","Fourth Amendment (2013)","Fifth Amendment (2019)","Sixth Amendment (2024)"],
+    verifiedDate: new Date("2026-09-04T20:53:05.537Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -163,14 +175,17 @@ const newStandards = [
     category: "Steel & Civil",
     scope: "Code of practice for the design, fabrication and erection of structural steelwork in highway bridges, overpasses, industrial roof trusses, transmission towers and multistorey buildings.",
     latestVersion: "2007",
-    amendments: ["Amendment 1 - 2012"],
     alliedStandards: [
       { isNumber: "IS 2062", title: "Hot rolled medium and high tensile structural steel", type: "Related Product" },
       { isNumber: "IS 1786", title: "High strength deformed steel bars", type: "Related Product" }
     ],
     certifications: ["BIS Certified Standard"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+800",
-    verifiedDate: new Date("2024-01-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("2007-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2022,
+    amendments: ["First Amendment (2012)","Second Amendment (2024)"],
+    verifiedDate: new Date("2026-09-04T20:53:06.580Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -194,7 +209,10 @@ const newStandards = [
     ],
     certifications: ["BIS Certified Standard"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+10262",
-    verifiedDate: new Date("2023-12-01T00:00:00.000Z"),
+    
+    publishedOn: new Date("2019-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    verifiedDate: new Date("2026-09-04T20:53:07.577Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -212,13 +230,16 @@ const newStandards = [
     category: "Civil Construction",
     scope: "Specifies dimensions, compressive strength classes (3.5 to 35 N/mm²), water absorption and efflorescence limits for common burnt clay masonry bricks.",
     latestVersion: "1992",
-    amendments: ["Amendment 1 - 1997", "Amendment 2 - 2002"],
     alliedStandards: [
       { isNumber: "IS 3495", title: "Methods of tests of burnt clay building bricks", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1077",
-    verifiedDate: new Date("2023-10-05T00:00:00.000Z"),
+    
+    publishedOn: new Date("1992-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["First Amendment (2008)"],
+    verifiedDate: new Date("2026-09-04T20:53:08.608Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -244,13 +265,16 @@ const newStandards = [
     category: "Piping & Water Supply",
     scope: "Covers requirements for high density polyethylene (HDPE) pressure pipes (PE 63, PE 80, PE 100) intended for municipal drinking water supply, rural water projects, and industrial lines.",
     latestVersion: "2016",
-    amendments: ["Amendment 1 - 2020"],
     alliedStandards: [
       { isNumber: "IS 2530", title: "Methods of test for polyethylene molding materials", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+4984",
-    verifiedDate: new Date("2024-01-25T00:00:00.000Z"),
+    
+    publishedOn: new Date("2016-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2026,
+    amendments: ["First Amendment (2018)","Second Amendment (2022)"],
+    verifiedDate: new Date("2026-09-04T20:53:09.694Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -274,13 +298,16 @@ const newStandards = [
     category: "Piping & Water Supply",
     scope: "Specifies requirements for centrifugally cast ductile iron (DI) pressure pipes with socket and spigot ends, socket type Class K7, K9 and K12 for potable water and underground sewage lines.",
     latestVersion: "2000",
-    amendments: ["Amendment 1 - 2005", "Amendment 2 - 2012"],
     alliedStandards: [
       { isNumber: "IS 12288", title: "Code of practice for use and laying of ductile iron pipes", type: "Installation Code" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+8329",
-    verifiedDate: new Date("2023-12-10T00:00:00.000Z"),
+    
+    publishedOn: new Date("2000-02-28T00:00:00.000Z"),
+    latestReviewedYear: 2025,
+    amendments: ["First Amendment (2001)","Second Amendment (2012)","Third Amendment (2014)","Fourth Amendment (2016)","Fifth Amendment (2019)","Sixth Amendment (2025)"],
+    verifiedDate: new Date("2026-09-04T20:53:10.821Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -298,13 +325,16 @@ const newStandards = [
     category: "Piping & Water Supply",
     scope: "Specifies dimensions, weights and hydrostatic pressure testing for welded and seamless mild steel Galvanized Iron (GI) tubes and black steel pipes for water, gas and fire sprinkler lines.",
     latestVersion: "2004",
-    amendments: ["Amendment 1 - 2007", "Amendment 2 - 2016"],
     alliedStandards: [
       { isNumber: "IS 4736", title: "Hot-dip zinc coatings on mild steel tubes", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+1239",
-    verifiedDate: new Date("2023-11-20T00:00:00.000Z"),
+    
+    publishedOn: new Date("2018-07-31T00:00:00.000Z"),
+    latestReviewedYear: 2024,
+    amendments: ["First Amendment (2005)","Second Amendment (2007)","Third Amendment (2008)","Fourth Amendment (2010)"],
+    verifiedDate: new Date("2026-09-04T20:53:11.935Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -324,14 +354,17 @@ const newStandards = [
     category: "Electrical Infrastructure",
     scope: "Requirements for PVC insulated single-core and multi-core copper/aluminium electrical cables and flexible cords for building wiring, power distribution and lighting up to 1100 V.",
     latestVersion: "2010",
-    amendments: ["Amendment 1 - 2014"],
     alliedStandards: [
       { isNumber: "IS 8130", title: "Conductors for insulated electric cables", type: "Related Standard" },
       { isNumber: "IS 5831", title: "PVC insulation and sheath of electric cables", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+694",
-    verifiedDate: new Date("2024-02-05T00:00:00.000Z"),
+    
+    publishedOn: new Date("2011-05-31T00:00:00.000Z"),
+    latestReviewedYear: 2020,
+    amendments: ["First Amendment (2012)","Second Amendment (2014)","Third Amendment (2015)","Fourth Amendment (2020)"],
+    verifiedDate: new Date("2026-09-04T20:53:13.031Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -355,13 +388,16 @@ const newStandards = [
     category: "Electrical Infrastructure",
     scope: "Covers requirements for armoured and unarmoured XLPE insulated heavy-duty electrical cables for power transmission, street lighting, industrial power networks and substations.",
     latestVersion: "1988",
-    amendments: ["Amendment 1 - 1998", "Amendment 2 - 2011"],
     alliedStandards: [
       { isNumber: "IS 3975", title: "Low carbon galvanized steel wires for armouring cables", type: "Related Standard" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+7098",
-    verifiedDate: new Date("2023-10-15T00:00:00.000Z"),
+    
+    publishedOn: new Date("1990-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["First Amendment (1994)","Second Amendment (2007)","Third Amendment (2007)","Fourth Amendment (2011)","Fifth Amendment (2012)"],
+    verifiedDate: new Date("2026-09-04T20:53:14.115Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -385,7 +421,10 @@ const newStandards = [
     ],
     certifications: ["BIS CRS Mark", "MNRE Approved"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+14286",
-    verifiedDate: new Date("2024-01-18T00:00:00.000Z"),
+    
+    publishedOn: new Date("2010-01-31T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    verifiedDate: new Date("2026-09-04T20:53:15.108Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -405,13 +444,16 @@ const newStandards = [
     category: "Fire Safety",
     scope: "Specifies requirements for design, construction, hydraulic pressure testing, and fire extinguishing rating of portable fire extinguishers (ABC powder, CO2, water, foam).",
     latestVersion: "2018",
-    amendments: ["Amendment 1 - 2021"],
     alliedStandards: [
       { isNumber: "IS 4947", title: "Gas cartridges for use in fire extinguishers", type: "Related Product" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15683",
-    verifiedDate: new Date("2024-01-30T00:00:00.000Z"),
+    
+    publishedOn: new Date("2018-12-31T00:00:00.000Z"),
+    latestReviewedYear: 2023,
+    amendments: ["First Amendment (2024)"],
+    verifiedDate: new Date("2026-09-04T20:53:16.102Z"),
     status: "active",
     isDemo: false,
     clauses: [
@@ -429,13 +471,16 @@ const newStandards = [
     category: "Safety PPE",
     scope: "Specifies basic and additional requirements for safety footwear used in industrial, civil construction and airport environments, including steel toe-cap impact resistance and penetration resistance.",
     latestVersion: "2016",
-    amendments: ["Amendment 1 - 2019"],
     alliedStandards: [
       { isNumber: "IS 15298(Part 1)", title: "Test methods for footwear", type: "Test Method" }
     ],
     certifications: ["BIS ISI Mark"],
     sourceUrl: "https://standards.bis.gov.in/website/know-your-standards?searchTerm=IS+15298",
-    verifiedDate: new Date("2023-12-20T00:00:00.000Z"),
+    
+    publishedOn: new Date("2016-11-30T00:00:00.000Z"),
+    latestReviewedYear: 2021,
+    amendments: ["Amendment 1 - 2019"],
+    verifiedDate: new Date("2026-09-04T20:53:17.097Z"),
     status: "active",
     isDemo: false,
     clauses: [
