@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import TenderSimulator from './pages/TenderSimulator';
 import NotFound from './pages/NotFound';
 import BidComparator from './pages/BidComparator';
+import BidEvaluator from './pages/BidEvaluator';
 import Chatbot from './components/Chatbot';
 import { LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 
@@ -77,6 +78,7 @@ const Navigation = () => {
                   <Link to="/" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Search</Link>
                   <Link to="/tender" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Tender Simulator</Link>
                   <Link to="/compare" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium">Compare Bids</Link>
+                  <Link to="/bid-evaluator" className="hover:text-gray-300 px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1">🏆 Evaluate Bids</Link>
                 </>
               )}
               
@@ -139,6 +141,7 @@ function AppRoutes() {
           <Route path="/standard/:id" element={<ProtectedRoute><Detail /></ProtectedRoute>} />
           <Route path="/tender" element={<ProtectedRoute><TenderSimulator /></ProtectedRoute>} />
           <Route path="/compare" element={<ProtectedRoute><BidComparator /></ProtectedRoute>} />
+          <Route path="/bid-evaluator" element={<ProtectedRoute><BidEvaluator /></ProtectedRoute>} />
           {/* Role-specific Protected routes */}
           <Route path="/history" element={<ProtectedRoute requiredRole="user"><History /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />

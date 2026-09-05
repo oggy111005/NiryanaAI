@@ -431,7 +431,331 @@ app.post('/api/analyze-tender', authenticateToken, (req, res, next) => {
   }
 });
 
-// 6b. POST /api/screen-compliance (AI Compliance Screening - SIH Phase 5)
+// Heuristic multi-bidder parser fallback (for offline or throttled LLM environments)
+function extractBiddersHeuristic(text) {
+  const sections = text.split(/(?=BIDDER\s+\d+:|Vendor\s+[A-Z0-9]+:)/i)
+    .map(s => s.trim())
+    .filter(s => /^BIDDER\s+\d+:|^Vendor\s+[A-Z0-9]+:/i.test(s));
+
+  if (!sections.length) return [];
+
+  return sections.map((sec, idx) => {
+    const nameMatch = sec.match(/(?:BIDDER\s+\d+:|Vendor\s+[A-Z0-9]+:)\s*([^\r\n]+)/i);
+    const name = nameMatch ? nameMatch[1].trim() : ('Bidder ' + (idx + 1));
+
+    let proposedCostINR = null;
+    const costMatch = sec.match(/(?:Total Bid Amount|Proposed Cost|Bid Amount|Price|Cost)[^\d\r\n]*?(?:Rs\.?|INR)?\s*([\d,]+(?:\.\d+)?)/i);
+    if (costMatch) {
+      const rawNum = parseFloat(costMatch[1].replace(/,/g, ''));
+      if (!isNaN(rawNum)) proposedCostINR = rawNum;
+    }
+
+    let deliveryDays = null;
+    const daysMatch = sec.match(/(\d+)\s*(?:days|working days)/i);
+    if (daysMatch) {
+      const d = parseInt(daysMatch[1], 10);
+      if (!isNaN(d)) deliveryDays = d;
+    }
+
+    const isMarkClaimed = /isi\s*mark|bis\s*cert|licensed manufacturer|bis\s*license/i.test(sec) && !/not applicable|no isi|none specified/i.test(sec);
+
+    const stdMatches = (sec.match(/IS\s*[\r\n]?\s*\d+(?::\d{4})?/gi) || [])
+      .map(s => s.replace(/\s+/g, ' ').trim().toUpperCase());
+    const standardsClaimed = Array.from(new Set(stdMatches));
+
+    const experienceMentioned = /(?:\d+\s*years? of experience|completed \d+|prior government project|contracts? completed)/i.test(sec);
+
+    const materialDescriptions = [];
+    if (/cement/i.test(sec)) materialDescriptions.push('Ordinary Portland Cement conforming to IS specifications');
+    if (/steel|bars|rebar/i.test(sec)) materialDescriptions.push('Deformed steel reinforcement bars for concrete');
+    if (/pipes/i.test(sec)) materialDescriptions.push('Precast concrete pipes for drainage');
+    if (/cable|wire/i.test(sec)) materialDescriptions.push('PVC insulated electrical cables');
+
+    return {
+      name,
+      proposedCostINR,
+      deliveryDays,
+      isMarkClaimed,
+      standardsClaimed,
+      materialDescriptions: materialDescriptions.length ? materialDescriptions : ['General construction materials'],
+      experienceMentioned,
+      rawSummary: `Proposal from ${name} with stated timeline and technical standards compliance.`
+    };
+  });
+}
+
+// 6c. POST /api/evaluate-bids — Multi-Bidder PDF Evaluation Engine (SIH Phase 6)
+// Accepts a PDF containing multiple vendor proposals, extracts bidder data via Gemini,
+// scores each bidder on BIS compliance (vector search) + cost + timeline + experience,
+// applies mandatory criteria gate, and returns a ranked top-10 dashboard payload.
+app.post('/api/evaluate-bids', authenticateToken, (req, res, next) => {
+  upload.single('pdf')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: 'File too large. Max 10MB allowed.' });
+      return res.status(400).json({ error: err.message || 'File upload error' });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No PDF uploaded' });
+
+    // Parse tender context from form field
+    let tenderContext = {};
+    try { tenderContext = JSON.parse(req.body.tenderContext || '{}'); } catch {
+      return res.status(400).json({ error: 'Invalid tenderContext JSON' });
+    }
+    const { budgetCeiling, maxDeliveryDays, requiresISIMark, title } = tenderContext;
+
+    // ── Step 1: Extract raw text from PDF ────────────────────────────────────
+    const ext = require('path').extname(req.file.originalname || '').toLowerCase();
+    let pdfText = '';
+    if (ext === '.pdf' || req.file.mimetype === 'application/pdf') {
+      pdfText = await extractTextFromPdf(req.file.buffer);
+    } else {
+      pdfText = req.file.buffer.toString('utf-8');
+    }
+    if (!pdfText || !pdfText.trim()) {
+      return res.status(400).json({ error: 'Could not extract text from PDF. It may be a scanned image — please use a text-based PDF.' });
+    }
+
+    // ── Step 2: Gemini extracts structured bidder data (with retries and smart fallback) ───
+    const model = getGeminiModel();
+    let bidders = [];
+
+    if (model) {
+      const extractionPrompt = `You are a government procurement analyst reviewing a multi-vendor tender bid document.
+
+Your task: Extract ALL distinct vendor/bidder proposals from the text below.
+
+Each vendor section may be separated by headers like "Vendor A", "Bidder 1", company names, "Proposal from:", or similar markers.
+
+Return a JSON array. Each element must be a bidder object with EXACTLY these fields:
+{
+  "name": "Company or vendor name as string",
+  "proposedCostINR": <number in rupees, or null if not mentioned>,
+  "deliveryDays": <number of days for delivery/completion, or null if not mentioned>,
+  "isMarkClaimed": <true if they mention ISI mark / BIS certification / IS mark, else false>,
+  "standardsClaimed": ["IS 269", "IS 2062"],
+  "materialDescriptions": ["43 grade OPC cement", "Fe500 deformed steel bars"],
+  "experienceMentioned": <true if they mention past government projects or years of experience>,
+  "rawSummary": "One sentence summary of this vendor's proposal"
+}
+
+CRITICAL: Return ONLY a raw JSON array. No markdown, no code fences, no explanatory text. Start with [ and end with ].
+
+PDF TEXT:
+${pdfText.substring(0, 28000)}`;
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const geminiResult = await model.generateContent(extractionPrompt);
+          const rawText = geminiResult.response.text().trim();
+          let cleaned = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+          const firstOpen = cleaned.indexOf('[');
+          const lastClose = cleaned.lastIndexOf(']');
+          if (firstOpen !== -1 && lastClose > firstOpen) {
+            cleaned = cleaned.substring(firstOpen, lastClose + 1);
+          }
+          const parsed = JSON.parse(cleaned);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            bidders = parsed;
+            break;
+          }
+        } catch (geminiErr) {
+          console.warn(`Gemini bidder extraction attempt ${attempt} warning:`, geminiErr.message);
+          if (attempt < 2) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+          }
+        }
+      }
+    }
+
+    // Heuristic fallback if Gemini is offline, throttled, or returns malformed response
+    if (!bidders || bidders.length === 0) {
+      console.log('Falling back to deterministic heuristic multi-bidder parser...');
+      bidders = extractBiddersHeuristic(pdfText);
+    }
+
+    if (!bidders || bidders.length === 0) {
+      return res.status(400).json({ error: 'No bidder proposals could be identified in the PDF. Please verify sections are clearly demarcated.' });
+    }
+
+    // ── Step 3: BIS Compliance scoring via Vector Search (no extra AI call) ──
+    const allStandardsWithEmb = await Standard.find({ isDemo: { $ne: true } }).select('+embedding').lean();
+
+    const scoredBidders = await Promise.all(bidders.map(async (bidder) => {
+      let bisScore = 0;
+      let matchedStandards = [];
+
+      const searchText = (bidder.materialDescriptions || []).join('. ') +
+        ' ' + (bidder.standardsClaimed || []).join(' ');
+
+      if (searchText.trim() && extractor) {
+        try {
+          const output = await extractor(searchText.trim(), { pooling: 'mean', normalize: true });
+          const queryEmb = Array.from(output.data);
+          const ranked = allStandardsWithEmb
+            .filter(s => s.embedding && s.embedding.length > 0)
+            .map(s => ({ isNumber: s.isNumber, title: s.title, score: cosineSimilarity(queryEmb, s.embedding) }))
+            .sort((a, b) => b.score - a.score);
+
+          const topMatches = ranked.filter(r => r.score > 0.35).slice(0, 5);
+          matchedStandards = topMatches.map(m => ({ isNumber: m.isNumber, title: m.title, score: m.score }));
+
+          if (topMatches.length > 0) {
+            bisScore = Math.round((topMatches.reduce((s, m) => s + m.score, 0) / topMatches.length) * 100);
+          }
+          // Bonus for explicitly citing IS standards
+          const bonus = Math.min((bidder.standardsClaimed || []).length * 5, 15);
+          bisScore = Math.min(bisScore + bonus, 100);
+        } catch {
+          bisScore = (bidder.standardsClaimed || []).length > 0 ? 40 : 10;
+        }
+      } else if ((bidder.standardsClaimed || []).length > 0) {
+        bisScore = Math.min(bidder.standardsClaimed.length * 15, 60);
+      }
+
+      return { ...bidder, bisScore, matchedStandards };
+    }));
+
+    // ── Step 4: Mandatory Criteria Gate (hard pass/fail, no AI) ─────────────
+    const qualifiedBidders = [];
+    const disqualifiedBidders = [];
+
+    for (const bidder of scoredBidders) {
+      const failReasons = [];
+
+      if (budgetCeiling && bidder.proposedCostINR != null && bidder.proposedCostINR > budgetCeiling) {
+        failReasons.push(`Proposed cost ₹${(bidder.proposedCostINR / 100000).toFixed(1)}L exceeds budget ceiling of ₹${(budgetCeiling / 100000).toFixed(1)}L`);
+      }
+      if (maxDeliveryDays && bidder.deliveryDays != null && bidder.deliveryDays > maxDeliveryDays) {
+        failReasons.push(`Delivery timeline ${bidder.deliveryDays} days exceeds maximum allowed ${maxDeliveryDays} days`);
+      }
+      if (requiresISIMark && !bidder.isMarkClaimed) {
+        failReasons.push('ISI/BIS certification mark not claimed in proposal');
+      }
+      if (bidder.bisScore < 12) {
+        failReasons.push('BIS compliance score critically low — no recognizable Indian Standards referenced');
+      }
+
+      if (failReasons.length > 0) {
+        disqualifiedBidders.push({ ...bidder, failReasons, status: 'DISQUALIFIED' });
+      } else {
+        qualifiedBidders.push({ ...bidder, status: 'QUALIFIED' });
+      }
+    }
+
+    // ── Step 5: Composite Scoring (pure math on qualified bidders) ───────────
+    const allBidsUseless = qualifiedBidders.length === 0;
+
+    const costs = qualifiedBidders.filter(b => b.proposedCostINR != null).map(b => b.proposedCostINR);
+    const timelines = qualifiedBidders.filter(b => b.deliveryDays != null).map(b => b.deliveryDays);
+    const minCost = costs.length ? Math.min(...costs) : null;
+    const maxCost = costs.length ? Math.max(...costs) : null;
+    const minDays = timelines.length ? Math.min(...timelines) : null;
+    const maxDays = timelines.length ? Math.max(...timelines) : null;
+
+    const compositeScored = qualifiedBidders.map(bidder => {
+      let costScore = 60;
+      if (bidder.proposedCostINR != null && minCost != null && maxCost != null) {
+        costScore = maxCost === minCost ? 80 : Math.round(((maxCost - bidder.proposedCostINR) / (maxCost - minCost)) * 100);
+      }
+
+      let timelineScore = 60;
+      if (bidder.deliveryDays != null && minDays != null && maxDays != null) {
+        timelineScore = maxDays === minDays ? 80 : Math.round(((maxDays - bidder.deliveryDays) / (maxDays - minDays)) * 100);
+      }
+
+      const experienceScore = bidder.experienceMentioned ? 85 : 30;
+
+      const finalScore = Math.round(
+        (bidder.bisScore * 0.50) +
+        (costScore * 0.30) +
+        (timelineScore * 0.10) +
+        (experienceScore * 0.10)
+      );
+
+      return { ...bidder, costScore, timelineScore, experienceScore, finalScore };
+    }).sort((a, b) => b.finalScore - a.finalScore).slice(0, 10);
+
+    const topBids = compositeScored.map((b, idx) => ({
+      ...b,
+      rank: idx + 1,
+      badge: idx === 0 ? 'WINNER' : idx === 1 ? 'RUNNER_UP' : idx === 2 ? 'SECOND_RUNNER_UP' : null
+    }));
+
+    return res.json({
+      tenderTitle: title || 'Untitled Tender',
+      totalBiddersFound: bidders.length,
+      qualifiedCount: qualifiedBidders.length,
+      disqualifiedCount: disqualifiedBidders.length,
+      allBidsUseless,
+      message: allBidsUseless
+        ? `All ${bidders.length} bid${bidders.length > 1 ? 's' : ''} were disqualified. None meet the mandatory procurement criteria. Improvements required before re-tendering.`
+        : null,
+      topBids,
+      disqualified: disqualifiedBidders.map(b => ({
+        name: b.name,
+        rawSummary: b.rawSummary,
+        bisScore: b.bisScore,
+        proposedCostINR: b.proposedCostINR,
+        failReasons: b.failReasons
+      }))
+    });
+
+  } catch (err) {
+    console.error('Bid evaluation error:', err);
+    res.status(500).json({ error: 'Server error during bid evaluation: ' + err.message });
+  }
+});
+
+// 6d. POST /api/generate-bid-pdf — Interactive Multi-Bidder PDF Packet Generator (SIH Phase 6)
+app.post('/api/generate-bid-pdf', authenticateToken, async (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const { execSync } = require('child_process');
+
+  const { tenderTitle, tenderRef, issuingAuthority, submissionDeadline, bidders } = req.body;
+  if (!bidders || !Array.isArray(bidders) || bidders.length === 0) {
+    return res.status(400).json({ error: 'At least one bidder proposal is required' });
+  }
+
+  const os = require('os');
+  const id = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const tempJson = path.join(os.tmpdir(), `temp_bids_${id}.json`);
+  const tempPdf = path.join(os.tmpdir(), `temp_bids_${id}.pdf`);
+
+  try {
+    fs.writeFileSync(tempJson, JSON.stringify({
+      tenderTitle: tenderTitle || 'Consolidated Tender Bids',
+      tenderRef: tenderRef || 'TENDER-REF-2026',
+      issuingAuthority: issuingAuthority || 'Government Procurement Authority',
+      submissionDeadline: submissionDeadline || '15 September 2026',
+      bidders
+    }), 'utf-8');
+
+    const scriptPath = path.join(__dirname, 'generate_bid_pdf.py');
+    execSync(`python "${scriptPath}" "${tempJson}" "${tempPdf}"`, { timeout: 15000 });
+
+    if (!fs.existsSync(tempPdf)) {
+      throw new Error('PDF output file was not generated');
+    }
+
+    const pdfBuffer = fs.readFileSync(tempPdf);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${(tenderRef || 'bids').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf"`);
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Error generating bid PDF:', err);
+    return res.status(500).json({ error: 'Failed to generate PDF: ' + err.message });
+  } finally {
+    try { if (fs.existsSync(tempJson)) fs.unlinkSync(tempJson); } catch (e) {}
+    try { if (fs.existsSync(tempPdf)) fs.unlinkSync(tempPdf); } catch (e) {}
+  }
+});
+
+
 // Evaluates vendor test evidence against applicable standard requirements
 app.post('/api/screen-compliance', authenticateToken, async (req, res) => {
   try {
